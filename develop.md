@@ -1,0 +1,68 @@
+# Developer notes
+
+## Tuning cell icon size (cat / X mark)
+
+The cat emoji and the X mark are sized relative to each cell's own
+width, not the whole board or viewport, using CSS container query
+units (`cqw`). This works because `.cell` has `container-type:
+inline-size` — `1cqw` inside it means "1% of that cell's width",
+regardless of board size (n) or screen size.
+
+All three knobs live at the top of `web/styles.css`, in `:root`:
+
+```css
+:root {
+  --cat-scale: 80;        /* cat emoji size */
+  --mark-scale: 80;       /* X mark bounding box (diagonal reach) */
+  --mark-thickness: 16;   /* X mark stroke thickness */
+}
+```
+
+Each number is a percentage of the cell's width:
+
+- `--cat-scale: 80` → the cat emoji's `font-size` is 80% of the cell
+  width. Note the emoji glyph itself renders a bit smaller than its
+  font-size (typical emoji font metrics), so the visible cat ends up
+  roughly 70–75% of the cell even at `80`. Bump the number if you want
+  it visually bigger.
+- `--mark-scale: 80` → the X's bounding box (the square the two
+  diagonal bars span) is 80% of the cell width.
+- `--mark-thickness: 16` → each bar of the X is 16% of the cell width
+  thick. This is independent of `--mark-scale`, so you can make the X
+  bigger without making it thicker, or vice versa.
+
+Just edit the numbers and reload — no build step. If you want the cat
+and the X to visually match in size, keep `--cat-scale` and
+`--mark-scale` equal (they're both `80` by default).
+
+### Why not just bump `font-size` on `.cell`?
+
+The X was originally the Unicode `✕` character. Its thickness is
+whatever the browser's font renders it at — not something you can
+tune, and it looked too thin. The X is now drawn as two CSS `div`s
+(`.mark .bar`) rotated ±45°, so both its size and stroke thickness are
+explicit numbers instead of "whatever the font happens to draw."
+
+## Tuning region colors
+
+Region colors are CSS-driven. The current browser palette provides 14 distinct
+region styles (`data-region="0"` through `data-region="13"`).
+
+- Base region variables and dimmed mark colors live in `web/themes/default.css`.
+- Base cell selectors live in `web/styles.css`.
+- Glass / Pixel / Tile / Paper / Neon variants live in `web/themes/cell-styles.css`.
+- `game.js` does not wrap region ids. If a board requests a region id beyond the
+  available palette, the level is rejected instead of reusing an existing color.
+- Browser random levels are currently generated for N=6..14, so the palette must
+  contain at least 14 distinct entries before 13x13 / 14x14 are exposed in the UI.
+- Regions 10..13 deliberately use four categorical hues that are not reused by the tail palette:
+  yellow, magenta, vivid red, and royal blue. When tuning them, compare against regions 0..9
+  as a complete set instead of adjusting only the last four swatches.
+
+When adding a larger board later, add the new palette entries first, then raise the
+generator/display limits. Never restore modulo color wrapping because it can make
+two different regions appear to be the same region.
+
+## Generating levels
+
+See the "Generating levels" section in `README.md`.

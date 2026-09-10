@@ -1,0 +1,632 @@
+:root {
+  /* Cell-content sizing: numbers are a percentage of the cell's own
+     width (via CSS container query units, not the whole board). Tune
+     these directly — see develop.md for how they interact. */
+  --cat-scale: 80;
+  /* cat emoji size */
+  --mark-scale: 80;
+  /* X mark bounding box (diagonal reach) */
+  --mark-thickness: 16;
+  /* X mark stroke thickness */
+  --hypo-scale: 68;
+  /* hypothesis triangle size */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.hidden {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #202124;
+  color: #e8eaed;
+  min-height: 100vh;
+  touch-action: manipulation;
+  /* disables double-tap zoom on iOS Safari */
+}
+
+.app-header {
+  text-align: center;
+  padding: 16px 0 8px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+#app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+.screen.hidden {
+  display: none;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #9aa0a6;
+  margin: 24px 0 8px;
+}
+
+.button-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.button-grid button {
+  flex: 1 0 64px;
+  min-width: 56px;
+  padding: 12px 8px;
+  font-size: 1rem;
+  border: var(--select-button-border, none);
+  border-radius: var(--select-button-radius, 10px);
+  background: var(--select-button-bg, #303134);
+  color: var(--select-button-text, #e8eaed);
+  box-shadow: var(--select-button-shadow, none);
+  cursor: pointer;
+}
+
+/* Size list: fixed 5 per row so the last row never stretches */
+#size-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Stage/level lists: fixed 5 per row so the last row never stretches. */
+#stage-buttons,
+#level-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+#stage-buttons button,
+#level-buttons button {
+  flex: none;
+  min-width: 0;
+}
+
+#stage-buttons {
+  margin-bottom: 6px;
+}
+
+/* Stage buttons toggle their own 100-level list; no separate heading control. */
+/* Stage colour reflects the percentage of levels completed with three stars. */
+#stage-buttons .stage-button {
+  border: 1px solid rgba(255,255,255,.15);
+  transition: filter 100ms ease, outline-color 100ms ease;
+}
+
+#stage-buttons .stage-button[data-progress-band="0"] {
+  background: linear-gradient(180deg, #55595f, #44474c);
+  color: #eef0f2;
+}
+
+#stage-buttons .stage-button[data-progress-band="1-25"] {
+  background: linear-gradient(180deg, #efb7bb, #dc969c);
+  color: #3c2024;
+}
+
+#stage-buttons .stage-button[data-progress-band="26-50"] {
+  background: linear-gradient(180deg, #f0dfa9, #dcc87f);
+  color: #3d351b;
+}
+
+#stage-buttons .stage-button[data-progress-band="51-75"] {
+  background: linear-gradient(180deg, #b8dfbd, #94c79c);
+  color: #203724;
+}
+
+#stage-buttons .stage-button[data-progress-band="76-99"] {
+  background: linear-gradient(180deg, #bbd9ef, #95c0df);
+  color: #1f3343;
+}
+
+#stage-buttons .stage-button[data-progress-band="100"] {
+  background: linear-gradient(180deg, #6da4f0, #4c82d4);
+  color: #ffffff;
+}
+
+/* Selected stage keeps its progress colour; selection is outline only. */
+#stage-buttons .stage-button.selected {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(0, 229, 255, .55);
+}
+
+#stage-buttons .stage-button:active {
+  filter: brightness(.92);
+}
+
+/* Completed level/stage indicator. A stage receives the same 3-star style only
+   after every level in that 100-level block has three stars. */
+#stage-buttons button.done,
+#level-buttons button.done {
+  position: relative;
+}
+
+#stage-buttons button[data-stars="3"],
+#level-buttons button[data-stars="3"] {
+  background: var(--level-complete-3-bg, #1b3a22);
+  color: var(--level-complete-3-text, #81c995);
+}
+
+/* Stage progress colours take priority over the legacy completion colour. */
+#stage-buttons .stage-button[data-progress-band="100"] {
+  background: linear-gradient(180deg, #6da4f0, #4c82d4);
+  color: #ffffff;
+}
+
+#level-buttons button[data-stars="1"],
+#level-buttons button[data-stars="2"] {
+  background: var(--level-complete-12-bg, #372800);
+  color: var(--level-complete-12-text, #f5c518);
+}
+
+#stage-buttons button[data-stars]::after,
+#level-buttons button[data-stars]::after {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 0.42rem;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  opacity: 0.9;
+}
+
+#level-buttons button[data-stars="1"]::after {
+  content: "★";
+}
+
+#level-buttons button[data-stars="2"]::after {
+  content: "★★";
+}
+
+#stage-buttons button[data-stars="3"]::after,
+#level-buttons button[data-stars="3"]::after {
+  content: "★★★";
+}
+
+
+/* Procedural random-stage entry appears before numbered stages. */
+#stage-buttons .random-stage-button {
+  border: 1px solid rgba(255,255,255,.2);
+  background: linear-gradient(180deg, #6f5aa8, #554184);
+  color: #fff;
+  font-weight: 700;
+}
+
+#stage-buttons .random-stage-button:disabled {
+  opacity: .65;
+  cursor: progress;
+}
+
+#stage-buttons .random-stage-button small {
+  display: block;
+  margin-top: 3px;
+  font-size: .68rem;
+  font-weight: 500;
+  opacity: .85;
+  font-variant-numeric: tabular-nums;
+}
+
+.win-time {
+  margin: 4px 0 18px;
+  text-align: center;
+  color: #c7d2fe;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.55;
+}
+
+/* Tool-toggle buttons in the second toolbar row */
+.game-toolbar button.tool-toggle {
+  padding: 8px 9px;
+  min-width: 0;
+}
+
+/* Hypothesis tool: the icon is themeable independently from the label. */
+#btn-toggle-hypo.hypo-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+#btn-toggle-hypo .hypo-tool-icon {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 14px;
+  flex: 0 0 16px;
+  line-height: 1;
+}
+
+#btn-toggle-hypo.off .hypo-tool-icon {
+  opacity: 0.38;
+}
+
+/* Second toolbar: stretch every button to fill the full width equally */
+.game-toolbar.tool-row {
+  gap: 6px;
+}
+
+.game-toolbar.tool-row button {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 4px;
+}
+
+.game-toolbar button.off {
+  background: #282828;
+  color: #5f6368;
+}
+
+.button-grid button:active {
+  background: var(--select-button-active-bg, #3c4043);
+}
+
+.button-grid button.selected:not(.cell-style-button):not(.stage-button) {
+  background: var(--select-button-selected-bg, #8ab4f8);
+  color: var(--select-button-selected-text, #202124);
+  font-weight: var(--select-button-selected-weight, 700);
+}
+
+.game-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 16px 0 8px;
+}
+
+.game-toolbar button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #303134;
+  color: #e8eaed;
+  font-size: 0.9rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#game-title {
+  font-weight: 600;
+  color: #9aa0a6;
+}
+
+.hearts {
+  font-size: 1rem;
+  letter-spacing: 2px;
+}
+
+.status-banner {
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.status-banner.hidden {
+  display: none;
+}
+
+.status-banner.win {
+  background: #1e4620;
+  color: #a8e6a3;
+}
+
+.status-banner.lose {
+  background: #4a1e1e;
+  color: #f4a8a3;
+}
+
+.board {
+  display: grid;
+  gap: var(--board-gap, 4px);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: var(--board-radius, 12px);
+  cursor: pointer;
+}
+
+.cell {
+  container-type: inline-size;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--cell-border, none);
+  border-radius: var(--cell-radius, 10px);
+  box-shadow: var(--cell-shadow, none);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell .cat-icon {
+  display: none;
+  font-size: calc(var(--cat-scale) * 1cqw);
+  line-height: 1;
+}
+
+.cell .hypo-icon {
+  display: none;
+  font-size: calc(var(--hypo-scale) * 1cqw);
+  line-height: 1;
+  color: var(--cell-hypo-color, rgba(32, 33, 36, 0.65));
+}
+
+.cell .mark {
+  display: none;
+  position: relative;
+  width: calc(var(--mark-scale) * 1cqw);
+  height: calc(var(--mark-scale) * 1cqw);
+}
+
+.cell .mark .bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: calc(var(--mark-thickness) * 1cqw);
+  background: var(--cell-mark-color, rgba(32, 33, 36, 0.75));
+  border-radius: calc(var(--mark-thickness) * 0.5 * 1cqw);
+}
+
+.cell .mark .bar:first-child {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.cell .mark .bar:last-child {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.cell[data-state="1"] .mark {
+  display: block;
+}
+
+.cell[data-state="2"] .cat-icon {
+  display: block;
+  transform-origin: 50% 85%;
+  animation: cat-found-pop 460ms cubic-bezier(0.22, 1.35, 0.42, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes cat-found-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(34%) scale(0.18, 0.12) rotate(-10deg);
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+  38% {
+    opacity: 1;
+    transform: translateY(-18%) scale(1.30, 1.38) rotate(6deg);
+    filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.30));
+  }
+  58% {
+    transform: translateY(4%) scale(0.92, 0.84) rotate(-3deg);
+  }
+  76% {
+    transform: translateY(-6%) scale(1.08, 1.12) rotate(2deg);
+  }
+  90% {
+    transform: translateY(1%) scale(0.98, 0.96) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.18));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell[data-state="2"] .cat-icon {
+    animation: none;
+  }
+}
+
+.cell[data-state="3"] .hypo-icon {
+  display: block;
+}
+
+.cell[data-state="4"] .mark {
+  display: block;
+}
+
+.cell[data-state="4"] .mark .bar {
+  background: var(--cell-wrong-mark-color, rgba(220, 38, 38, 0.9));
+}
+
+.cell:hover::after,
+.cell.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--cell-radius, 10px);
+  pointer-events: none;
+}
+
+.cell:hover::after {
+  box-shadow: var(--cell-hover-shadow, inset 0 0 0 3px rgba(32, 33, 36, 0.45));
+}
+
+.cell.active::after {
+  background: var(--cell-active-overlay, rgba(0, 0, 0, 0.18));
+}
+
+.cell[data-state="4"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--cell-radius, 10px);
+  box-shadow: var(--cell-wrong-shadow, inset 0 0 0 3px #dc2626);
+  background: var(--cell-wrong-overlay, rgba(220, 38, 38, 0.12));
+  pointer-events: none;
+}
+
+/* Theme-driven region colours. The actual palette lives only in themes/default.css.
+   Other cell styles reuse --region-color and keep only their visual effects locally. */
+.cell[data-region="0"]  { --region-color: var(--region-0);  --region-dim-color: var(--region-dim-0); }
+.cell[data-region="1"]  { --region-color: var(--region-1);  --region-dim-color: var(--region-dim-1); }
+.cell[data-region="2"]  { --region-color: var(--region-2);  --region-dim-color: var(--region-dim-2); }
+.cell[data-region="3"]  { --region-color: var(--region-3);  --region-dim-color: var(--region-dim-3); }
+.cell[data-region="4"]  { --region-color: var(--region-4);  --region-dim-color: var(--region-dim-4); }
+.cell[data-region="5"]  { --region-color: var(--region-5);  --region-dim-color: var(--region-dim-5); }
+.cell[data-region="6"]  { --region-color: var(--region-6);  --region-dim-color: var(--region-dim-6); }
+.cell[data-region="7"]  { --region-color: var(--region-7);  --region-dim-color: var(--region-dim-7); }
+.cell[data-region="8"]  { --region-color: var(--region-8);  --region-dim-color: var(--region-dim-8); }
+.cell[data-region="9"]  { --region-color: var(--region-9);  --region-dim-color: var(--region-dim-9); }
+.cell[data-region="10"] { --region-color: var(--region-10); --region-dim-color: var(--region-dim-10); }
+.cell[data-region="11"] { --region-color: var(--region-11); --region-dim-color: var(--region-dim-11); }
+.cell[data-region="12"] { --region-color: var(--region-12); --region-dim-color: var(--region-dim-12); }
+.cell[data-region="13"] { --region-color: var(--region-13); --region-dim-color: var(--region-dim-13); }
+
+.cell[data-region] {
+  background: var(--region-color);
+}
+
+.cell[data-state="1"][data-region] {
+  background: var(--region-dim-color);
+}
+
+/* Win modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-box {
+  background: #303134;
+  border-radius: 20px;
+  padding: 36px 32px 28px;
+  text-align: center;
+  min-width: 240px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.modal-emoji {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #a8e6a3;
+  margin-bottom: 28px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-buttons button {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  background: #8ab4f8;
+  color: #202124;
+  font-weight: 700;
+}
+
+.modal-buttons button.secondary {
+  background: #5f6368;
+  color: #e8eaed;
+  font-weight: 400;
+}
+
+.help-content {
+  text-align: left;
+  font-size: 0.9rem;
+  color: #e8eaed;
+  margin-bottom: 20px;
+}
+
+.help-content h3 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9aa0a6;
+  margin: 14px 0 6px;
+}
+
+.help-content h3:first-child {
+  margin-top: 0;
+}
+
+.help-content ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.help-content li {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+/* Cell-style selector on the level-select screen */
+#cell-style-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+#cell-style-buttons button {
+  min-width: 0;
+}
+
+#cell-style-buttons .cell-style-button.selected {
+  outline: 2px solid var(--select-button-selected-bg, #8ab4f8);
+  outline-offset: 2px;
+}
+
+/* Random stage occupies its own full row before the numbered stage buttons. */
+#stage-buttons .random-stage-button {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+#stage-buttons .random-stage-button small {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#stage-buttons .random-stage-stars {
+  color: #ffd75a;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
