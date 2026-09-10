@@ -38,6 +38,16 @@ body {
 .app-header h1 {
   margin: 0;
   font-size: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.brand-cat {
+  width: 1.5em;
+  height: 1.5em;
+  object-fit: contain;
 }
 
 #app {
@@ -534,6 +544,14 @@ h2 {
   font-size: 3rem;
   line-height: 1;
   margin-bottom: 12px;
+}
+
+.modal-cat {
+  display: block;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  margin: 0 auto 12px;
 }
 
 .modal-title {
