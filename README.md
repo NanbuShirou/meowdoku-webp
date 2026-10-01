@@ -1,39 +1,19 @@
-# Meowdoku
+# MeowDoku Web v2.0.0
 
-GitHub Pages 版 Meowdoku。
+MeowDoku 2.0 的 GitHub Pages 靜態網頁版。遊戲規則、探索地圖、關卡手冊、道具、隨機關卡、分享碼、進度與貓咪動畫皆沿用 Android 2.0。
 
-## 目前結構
+網頁版不提供 BGM、盤面上傳或離開遊戲按鈕；按鍵與貓叫音效由瀏覽器直接播放。
 
-```text
-meowdoku/
-├─ index.html
-├─ game.js
-├─ random-generator.js
-├─ styles.css
-├─ levels_index.json
-├─ themes/
-│  ├─ default.css
-│  ├─ cell-styles.css
-│  └─ cell-style-images/
-│     ├─ original.webp
-│     ├─ glass.webp
-│     ├─ pixel.webp
-│     ├─ tile.webp
-│     ├─ paper.webp
-│     └─ neon.webp
-├─ levels/
-└─ tools/
+## 執行
+
+線上版：<https://nanbushirou.github.io/meowdoku-webp/>
+
+本機測試請在倉庫根目錄啟動 HTTP 伺服器，再開啟 <http://localhost:8000/>：
+
+```sh
+python -m http.server 8000
 ```
 
-## 部署方式
+直接雙擊 `index.html` 會因瀏覽器限制而無法讀取關卡。
 
-GitHub Pages 直接設定：
-- Branch：`main`
-- Folder：`/(root)`
-
-不需要再透過 `/web/` 轉址，網站根目錄就是遊戲本體。
-
-## 備註
-
-- 樣式貓咪圖示已由 CSS 內嵌 Base64 改為獨立 WebP 檔案。
-- `cell-styles.css` 已大幅縮小，較利於快取與維護。
+`levels/normal/`、`levels/hard/` 與 `levels/extra/` 共提供 4,200 個靜態關卡。關卡清單由 `levels_index.json` 控制，遊戲紀錄儲存在瀏覽器 `localStorage`。

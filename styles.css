@@ -1,7 +1,5 @@
 :root {
-  /* Cell-content sizing: numbers are a percentage of the cell's own
-     width (via CSS container query units, not the whole board). Tune
-     these directly — see develop.md for how they interact. */
+  /* 圖示尺寸依格子的內容寬度計算；棋盤共用 --cell-unit，由 ResizeObserver 同步。 */
   --cat-scale: 80;
   /* cat emoji size */
   --mark-scale: 80;
@@ -12,8 +10,111 @@
   /* hypothesis triangle size */
 }
 
+
+/* App theme. The layout mirrors NSMethod: light/dark mode is independent
+   from the selected accent colour. */
+:root {
+  --theme-accent: #915DFF;
+  --theme-background-image: url("images/UI/background_Darkcolor.png");
+  --back-icon-image: url("images/UI/back-dark.png");
+  --setup-icon-image: url("images/UI/setup-dark.png");
+  --theme-cat-image: url("images/UI/background_cat.png");
+  --reminder-secondary-image: url("images/UI/cat_footprints.png");
+  --reminder-tool-image: var(--reminder-secondary-image);
+  --theme-accent-strong: #7442DF;
+  --theme-on-accent: #FFFFFF;
+  --theme-bg: #00042B;
+  --theme-surface: #0E1340;
+  --theme-surface-2: #1A2052;
+  --theme-surface-disabled: #090E35;
+  --theme-text: #F2F1FF;
+  --theme-text-secondary: #B8B7D1;
+  --theme-text-disabled: #777894;
+  --theme-outline: rgba(255, 255, 255, 0.15);
+  --theme-hover: rgba(255, 255, 255, 0.08);
+  --theme-active: rgba(255, 255, 255, 0.14);
+  --theme-overlay: rgba(0, 0, 0, 0.60);
+  --theme-shadow: rgba(0, 0, 0, 0.50);
+  --theme-accent-soft: color-mix(in srgb, var(--theme-accent) 24%, var(--theme-surface));
+}
+
+html[data-theme-mode="dark"] {
+  color-scheme: dark;
+  --theme-background-image: url("images/UI/background_Darkcolor.png");
+  --back-icon-image: url("images/UI/back-dark.png");
+  --setup-icon-image: url("images/UI/setup-dark.png");
+  --theme-bg: #00042B;
+  --theme-surface: #0E1340;
+  --theme-surface-2: #1A2052;
+  --theme-surface-disabled: #090E35;
+  --theme-text: #F2F1FF;
+  --theme-text-secondary: #B8B7D1;
+  --theme-text-disabled: #777894;
+  --theme-outline: rgba(255, 255, 255, 0.15);
+  --theme-hover: rgba(255, 255, 255, 0.08);
+  --theme-active: rgba(255, 255, 255, 0.14);
+  --theme-overlay: rgba(0, 0, 0, 0.60);
+  --theme-shadow: rgba(0, 0, 0, 0.50);
+  --theme-on-accent: #FFFFFF;
+}
+
+html[data-theme-mode="light"] {
+  color-scheme: light;
+  --theme-background-image: url("images/UI/background_Lightcolor.png");
+  --back-icon-image: url("images/UI/back-dark.png");
+  --setup-icon-image: url("images/UI/setup-dark.png");
+  --theme-bg: #EBE8D9;
+  --theme-surface: #F5F2E7;
+  --theme-surface-2: #DDD8C6;
+  --theme-surface-disabled: #E2DDCD;
+  --theme-text: #24231E;
+  --theme-text-secondary: #666255;
+  --theme-text-disabled: #969184;
+  --theme-outline: rgba(32, 33, 36, 0.14);
+  --theme-hover: rgba(32, 33, 36, 0.06);
+  --theme-active: rgba(32, 33, 36, 0.11);
+  --theme-overlay: rgba(32, 33, 36, 0.46);
+  --theme-shadow: rgba(32, 33, 36, 0.22);
+  --theme-on-accent: #FFFFFF;
+}
+
+html[data-theme-accent="purple"] {
+  --theme-accent: #915DFF;
+  --theme-accent-strong: #7442DF;
+}
+
+html[data-theme-accent="blue"] {
+  --theme-accent: #4C82D4;
+  --theme-accent-strong: #3569BA;
+}
+
+html[data-theme-accent="green"] {
+  --theme-accent: #34A853;
+  --theme-accent-strong: #218C3F;
+}
+
+html[data-theme-accent="orange"] {
+  --theme-accent: #F57407;
+  --theme-accent-strong: #D65F00;
+}
+
+html[data-reminder-icon="paw"] {
+  --reminder-secondary-image: url("images/UI/cat_footprints.png");
+  --reminder-tool-image: var(--reminder-secondary-image);
+}
+
+html[data-reminder-icon="fish"] {
+  --reminder-secondary-image: url("images/UI/Fish_bone.png");
+  --reminder-tool-image: var(--reminder-secondary-image);
+}
+
 * {
   box-sizing: border-box;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-weight: 700;
 }
 
 .hidden {
@@ -23,37 +124,65 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #202124;
-  color: #e8eaed;
+  font-weight: 700;
+  background: var(--theme-bg);
+  color: var(--theme-text);
   min-height: 100vh;
   touch-action: manipulation;
+  overflow-x: hidden;
   /* disables double-tap zoom on iOS Safari */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: center / cover no-repeat var(--theme-bg);
+  background-image: var(--theme-background-image);
+  z-index: -2;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  left: max(0px, env(safe-area-inset-left, 0px));
+  bottom: 0;
+  width: min(38vw, 250px);
+  aspect-ratio: 0.82;
+  background: left bottom / contain no-repeat var(--theme-cat-image);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .app-header {
+  position: relative;
+  z-index: 1;
   text-align: center;
-  padding: 16px 0 8px;
+  padding: 8px 0 2px;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.6rem;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
 }
 
-.brand-cat {
-  width: 64px;
-  height: 64px;
+.app-header-title {
+  display: block;
+  width: min(82vw, 500px);
+  height: auto;
   object-fit: contain;
 }
 
 #app {
+  position: relative;
+  z-index: 1;
   max-width: 560px;
   margin: 0 auto;
-  padding: 0 16px 32px;
+  padding: 0 16px calc(32px + env(safe-area-inset-bottom, 0px));
 }
 
 .screen.hidden {
@@ -62,8 +191,8 @@ body {
 
 h2 {
   font-size: 1rem;
-  font-weight: 600;
-  color: #9aa0a6;
+  font-weight: 700;
+  color: var(--theme-text-secondary);
   margin: 24px 0 8px;
 }
 
@@ -84,6 +213,7 @@ h2 {
   color: var(--select-button-text, #e8eaed);
   box-shadow: var(--select-button-shadow, none);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 /* Size list: fixed 5 per row so the last row never stretches */
@@ -184,26 +314,45 @@ h2 {
 
 #stage-buttons button[data-stars]::after,
 #level-buttons button[data-stars]::after {
+  content: "";
   position: absolute;
   bottom: 2px;
   right: 3px;
-  font-size: 0.42rem;
-  line-height: 1;
-  letter-spacing: -0.5px;
+  height: .58rem;
+  background: url("images/UI/ui_icon_paw.png") left center / .58rem .58rem repeat-x;
   opacity: 0.9;
 }
 
 #level-buttons button[data-stars="1"]::after {
-  content: "★";
+  width: .58rem;
 }
 
 #level-buttons button[data-stars="2"]::after {
-  content: "★★";
+  width: 1.16rem;
 }
 
 #stage-buttons button[data-stars="3"]::after,
 #level-buttons button[data-stars="3"]::after {
-  content: "★★★";
+  width: 1.74rem;
+}
+
+/* A saved mid-game board uses the same lower-right badge zone as stars. */
+#level-buttons button .progress-heart {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  color: #ff2d2d;
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .42);
+  pointer-events: none;
+}
+
+/* When a cleared level also has a mid-game save, keep the heart in the
+   existing badge position and move the star group slightly left. */
+#level-buttons button.has-progress[data-stars]::after {
+  right: 14px;
 }
 
 
@@ -224,7 +373,7 @@ h2 {
   display: block;
   margin-top: 3px;
   font-size: .68rem;
-  font-weight: 500;
+  font-weight: 700;
   opacity: .85;
   font-variant-numeric: tabular-nums;
 }
@@ -237,45 +386,95 @@ h2 {
   line-height: 1.55;
 }
 
-/* Tool-toggle buttons in the second toolbar row */
+/* In-game navigation and action rows. */
 .game-toolbar button.tool-toggle {
-  padding: 8px 9px;
+  padding: 10px 12px;
   min-width: 0;
 }
 
-/* Hypothesis tool: the icon is themeable independently from the label. */
+/* Flag-placement tool keeps the existing themed hypothesis marker. */
 #btn-toggle-hypo.hypo-tool {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 #btn-toggle-hypo .hypo-tool-icon {
-  position: relative;
-  display: inline-block;
-  width: 16px;
-  height: 14px;
-  flex: 0 0 16px;
-  line-height: 1;
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 #btn-toggle-hypo.off .hypo-tool-icon {
   opacity: 0.38;
 }
 
-/* Second toolbar: stretch every button to fill the full width equally */
+.game-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 8px;
+}
+
+.game-nav-row {
+  justify-content: space-between;
+}
+
+.game-nav-row #btn-settings {
+  margin-left: auto;
+}
+
+.game-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 28px;
+  margin: 4px 0 0;
+}
+
+.game-meta-row #game-title {
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-meta-row .hearts {
+  flex: 0 0 auto;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
 .game-toolbar.tool-row {
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
 }
 
 .game-toolbar.tool-row button {
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
   min-width: 0;
-  padding: 8px 4px;
+  padding: 10px 6px;
+  font-size: 0.86rem;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
-.game-toolbar button.off {
+.game-toolbar button.off,
+.setting-toggle.off {
   background: #282828;
   color: #5f6368;
 }
@@ -290,12 +489,169 @@ h2 {
   font-weight: var(--select-button-selected-weight, 700);
 }
 
-.game-toolbar {
+.game-toolbar button,
+.settings-header button,
+.setting-toggle,
+.settings-link {
+  border: none;
+  border-radius: 8px;
+  background: #303134;
+  color: #e8eaed;
+  font-size: 0.9rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.game-toolbar button,
+.settings-header button {
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+
+/* Settings page opened from the in-game top-right button. */
+.settings-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 18px;
+}
+
+.settings-header h2 {
+  margin: 0;
+  text-align: center;
+  color: #e8eaed;
+  font-size: 1.05rem;
+}
+
+.settings-header::after {
+  content: "";
+  width: 70px;
+}
+
+.settings-list {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-item,
+.settings-link {
+  width: 100%;
+  min-height: 60px;
+  border-radius: 12px;
+  background: #303134;
+}
+
+.settings-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin: 16px 0 8px;
+  gap: 16px;
+  padding: 10px 12px 10px 16px;
+}
+
+.settings-item-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-item-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.settings-item-text span {
+  color: #9aa0a6;
+  font-size: 0.78rem;
+}
+
+.setting-toggle {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 40px;
+  padding: 0;
+  font-size: 1.05rem;
+}
+
+.settings-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  text-align: left;
+}
+
+/* 拉開三個設定入口與上方切換項目的距離。 */
+#btn-block-colors {
+  margin-top: 14px;
+}
+
+#btn-reminder-icons,
+#btn-help {
+  margin-top: 4px;
+}
+
+@media (max-width: 400px) {
+  .app-header {
+    padding-top: 10px;
+  }
+
+  #app {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .game-toolbar {
+    gap: 6px;
+  }
+
+  .game-nav-row #btn-back,
+  .game-nav-row #btn-settings {
+    width: 40px;
+    height: 40px;
+  }
+
+  .game-meta-row {
+    gap: 8px;
+  }
+
+  .game-meta-row #game-title {
+    font-size: 0.8rem;
+  }
+
+  .game-meta-row .hearts {
+    font-size: 0.88rem;
+    letter-spacing: 0;
+  }
+
+  .game-toolbar.tool-row {
+    gap: 5px;
+  }
+
+  .game-toolbar.tool-row button {
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .app-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .game-toolbar.tool-row button {
+    font-size: 0.72rem;
+  }
+}
+
+#game-title {
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-toolbar button {
@@ -307,16 +663,128 @@ h2 {
   font-size: 0.9rem;
   cursor: pointer;
   touch-action: manipulation;
+  white-space: nowrap;
+}
+
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.game-nav-row .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 21px;
+  background: transparent;
+  color: #e8eaed;
+}
+
+.game-nav-row .icon-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.game-nav-row .icon-button:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.game-nav-row .icon-button:focus-visible {
+  outline: 2px solid #8ab4f8;
+  outline-offset: 2px;
+}
+
+.toolbar-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  fill: currentColor;
+}
+
+.theme-nav-icon {
+  display: block;
+  width: 34px;
+  height: 34px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+}
+
+.theme-back-icon {
+  background-image: var(--back-icon-image);
+}
+
+.theme-setup-icon {
+  background-image: var(--setup-icon-image);
+}
+
+@media (max-width: 400px) {
+  .app-header {
+    padding-top: 10px;
+  }
+
+  #app {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .game-toolbar {
+    gap: 5px;
+  }
+
+  .game-info-row #btn-back {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .game-info-row #game-title {
+    font-size: 0.78rem;
+  }
+
+  .hearts {
+    font-size: 0.88rem;
+    letter-spacing: 0;
+  }
+
+  .tool-row .tool-label-full {
+    display: none;
+  }
+
+  .tool-row .tool-label-compact {
+    display: inline;
+  }
+}
+
+@media (max-width: 340px) {
+  .app-header h1 {
+    font-size: 1.35rem;
+  }
+
+    .game-toolbar.tool-row {
+    gap: 2px;
+  }
+
+  .game-toolbar.tool-row button {
+    padding-right: 1px;
+    padding-left: 1px;
+    font-size: 0.66rem;
+  }
 }
 
 #game-title {
-  font-weight: 600;
+  font-weight: 700;
   color: #9aa0a6;
-}
-
-.hearts {
-  font-size: 1rem;
-  letter-spacing: 2px;
 }
 
 .status-banner {
@@ -342,6 +810,7 @@ h2 {
 }
 
 .board {
+  --cell-unit: 1px;
   display: grid;
   gap: var(--board-gap, 4px);
   width: 100%;
@@ -355,8 +824,13 @@ h2 {
   cursor: pointer;
 }
 
+#board {
+  margin-top: 22px;
+}
+
 .cell {
-  container-type: inline-size;
+  min-width: 0;
+  min-height: 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -372,22 +846,29 @@ h2 {
 
 .cell .cat-icon {
   display: none;
-  font-size: calc(var(--cat-scale) * 1cqw);
+  font-size: calc(var(--cat-scale) * var(--cell-unit));
   line-height: 1;
 }
 
+
 .cell .hypo-icon {
   display: none;
-  font-size: calc(var(--hypo-scale) * 1cqw);
-  line-height: 1;
-  color: var(--cell-hypo-color, rgba(32, 33, 36, 0.65));
+  position: absolute;
+  inset: 16%;
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  visibility: visible;
+  z-index: 3;
 }
 
 .cell .mark {
   display: none;
   position: relative;
-  width: calc(var(--mark-scale) * 1cqw);
-  height: calc(var(--mark-scale) * 1cqw);
+  width: calc(var(--mark-scale) * var(--cell-unit));
+  height: calc(var(--mark-scale) * var(--cell-unit));
 }
 
 .cell .mark .bar {
@@ -395,9 +876,9 @@ h2 {
   top: 50%;
   left: 50%;
   width: 100%;
-  height: calc(var(--mark-thickness) * 1cqw);
+  height: calc(var(--mark-thickness) * var(--cell-unit));
   background: var(--cell-mark-color, rgba(32, 33, 36, 0.75));
-  border-radius: calc(var(--mark-thickness) * 0.5 * 1cqw);
+  border-radius: calc(var(--mark-thickness) * 0.5 * var(--cell-unit));
 }
 
 .cell .mark .bar:first-child {
@@ -452,8 +933,47 @@ h2 {
   }
 }
 
-.cell[data-state="3"] .hypo-icon {
+.cat-runner {
+  position: absolute;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+  animation: cat-run-away 1200ms linear forwards;
+  will-change: transform, opacity;
+}
+
+.cat-runner img {
+  position: relative;
   display: block;
+  width: auto;
+  height: 100%;
+  max-width: none;
+  animation: cat-run-steps 560ms steps(8) infinite;
+  image-rendering: pixelated;
+}
+
+.cat-runner.left img {
+  left: var(--cat-run-front-pad);
+}
+
+@keyframes cat-run-away {
+  0%, 88% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translateX(var(--cat-run-distance));
+  }
+}
+
+@keyframes cat-run-steps {
+  to { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-runner { display: none; }
+}
+
+.cell[data-state="3"] .hypo-icon {
+  display: block !important;
 }
 
 .cell[data-state="4"] .mark {
@@ -505,8 +1025,6 @@ h2 {
 .cell[data-region="9"]  { --region-color: var(--region-9);  --region-dim-color: var(--region-dim-9); }
 .cell[data-region="10"] { --region-color: var(--region-10); --region-dim-color: var(--region-dim-10); }
 .cell[data-region="11"] { --region-color: var(--region-11); --region-dim-color: var(--region-dim-11); }
-.cell[data-region="12"] { --region-color: var(--region-12); --region-dim-color: var(--region-dim-12); }
-.cell[data-region="13"] { --region-color: var(--region-13); --region-dim-color: var(--region-dim-13); }
 
 .cell[data-region] {
   background: var(--region-color);
@@ -541,17 +1059,11 @@ h2 {
 }
 
 .modal-emoji {
-  font-size: 3rem;
-  line-height: 1;
-  margin-bottom: 12px;
-}
-
-.modal-cat {
   display: block;
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
+  width: min(34vw, 150px);
+  height: auto;
   margin: 0 auto 12px;
+  object-fit: contain;
 }
 
 .modal-title {
@@ -581,7 +1093,7 @@ h2 {
 .modal-buttons button.secondary {
   background: #5f6368;
   color: #e8eaed;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .help-content {
@@ -593,7 +1105,7 @@ h2 {
 
 .help-content h3 {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #9aa0a6;
@@ -647,4 +1159,4437 @@ h2 {
   color: #ffd75a;
   letter-spacing: 1px;
   font-weight: 800;
+}
+
+
+/* Theme-driven application chrome. Functional board-region colours are kept
+   separate and can be customised on the block-colour screen. */
+.button-grid button,
+.game-toolbar button,
+.settings-header button,
+.setting-toggle,
+.settings-link,
+.settings-dangerless-button,
+.theme-mode-button,
+.theme-color-button {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  border-color: var(--theme-outline);
+}
+
+.button-grid button:active,
+.game-toolbar button:active,
+.settings-header button:active,
+.setting-toggle:active,
+.settings-link:active,
+.settings-dangerless-button:active,
+.theme-mode-button:active,
+.theme-color-button:active {
+  background: var(--theme-surface-2);
+}
+
+.button-grid button.selected:not(.cell-style-button):not(.stage-button),
+.theme-mode-button.selected,
+.theme-color-button.selected,
+.setting-toggle:not(.off),
+.game-toolbar button.tool-toggle:not(.off) {
+  background: var(--theme-accent);
+  color: var(--theme-on-accent);
+}
+
+.game-toolbar button.off,
+.setting-toggle.off {
+  background: var(--theme-surface-disabled);
+  color: var(--theme-text-disabled);
+}
+
+#stage-buttons .stage-button.selected,
+#cell-style-buttons .cell-style-button.selected {
+  outline-color: var(--theme-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-accent) 42%, transparent),
+              0 0 8px color-mix(in srgb, var(--theme-accent) 50%, transparent);
+}
+
+#stage-buttons .random-stage-button {
+  border-color: color-mix(in srgb, var(--theme-accent) 45%, var(--theme-outline));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--theme-accent) 88%, white),
+    var(--theme-accent-strong));
+  color: var(--theme-on-accent);
+}
+
+.game-nav-row .icon-button,
+.settings-back-button {
+  background: transparent;
+  color: var(--theme-text);
+}
+
+.game-nav-row .icon-button:hover,
+.settings-back-button:hover {
+  background: var(--theme-hover);
+}
+
+.game-nav-row .icon-button:active,
+.settings-back-button:active {
+  background: var(--theme-active);
+}
+
+.game-nav-row .icon-button:focus-visible,
+.settings-back-button:focus-visible {
+  outline-color: var(--theme-accent);
+}
+
+#game-title,
+.settings-item-text span,
+.block-color-description,
+.block-color-code,
+.settings-section-title,
+.help-content h3 {
+  color: var(--theme-text-secondary);
+}
+
+.settings-header h2,
+.help-content,
+.settings-item-text strong,
+.settings-link strong {
+  color: var(--theme-text);
+}
+
+.settings-item,
+.settings-link,
+.modal-box {
+  background: var(--theme-surface);
+}
+
+.settings-item,
+.settings-link,
+.theme-mode-button,
+.theme-color-button,
+.block-color-card,
+.settings-dangerless-button {
+  border: 1px solid var(--theme-outline);
+}
+
+.modal-overlay {
+  background: var(--theme-overlay);
+}
+
+.modal-box {
+  box-shadow: 0 8px 32px var(--theme-shadow);
+}
+
+.modal-buttons button {
+  background: var(--theme-accent);
+  color: var(--theme-on-accent);
+}
+
+.modal-buttons button.secondary {
+  background: var(--theme-surface-2);
+  color: var(--theme-text);
+}
+
+/* 道具視窗與過關／失敗共用淺色立體按鈕。 */
+#backpack-modal button,
+#detector-confirm-modal button,
+#win-modal .modal-buttons button {
+  border: 1px solid #70451f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffeab9, #d9a75e);
+  color: #2d1b10;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .6), 0 5px 0 #8d5d2f;
+  transition: transform 80ms ease-out;
+}
+
+#backpack-modal button:not(:disabled):active,
+#detector-confirm-modal button:not(:disabled):active,
+#win-modal .modal-buttons button:not(:disabled):active {
+  transform: translateY(4px);
+  box-shadow: inset 0 2px 0 rgba(112, 69, 31, .16), 0 1px 0 #8d5d2f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #backpack-modal button,
+  #detector-confirm-modal button,
+  #win-modal .modal-buttons button {
+    transition: none;
+  }
+}
+
+#backpack-title,
+#detector-confirm-title,
+#result-modal-title {
+  color: #173b6c;
+}
+
+.win-time {
+  color: color-mix(in srgb, var(--theme-accent) 70%, var(--theme-text));
+}
+
+/* Settings layout */
+.settings-section {
+  margin-bottom: 22px;
+}
+
+.settings-section-title {
+  margin: 0 0 9px;
+  padding: 0 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.settings-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 21px;
+}
+
+.settings-header::after {
+  width: 42px;
+}
+
+.theme-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.theme-mode-button {
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.theme-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.theme-color-button {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 9px 4px 7px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.theme-color-button.selected {
+  box-shadow: inset 0 0 0 2px var(--theme-on-accent);
+}
+
+.theme-color-swatch {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+.theme-purple { background: #915DFF; }
+.theme-blue { background: #4C82D4; }
+.theme-green { background: #34A853; }
+.theme-orange { background: #F57407; }
+
+.settings-link > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.settings-link small {
+  color: var(--theme-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+/* Block-colour editor */
+.block-color-description {
+  margin: -4px 2px 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.block-color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.block-color-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 62px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.block-color-card:active {
+  background: var(--theme-surface-2);
+}
+
+.block-color-swatch {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--theme-outline);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 16%, transparent);
+}
+
+.block-color-meta {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.block-color-name {
+  color: var(--theme-text);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.block-color-code {
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-dangerless-button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* NSMethod-style RGB colour editor */
+.block-color-editor-box {
+  width: min(92vw, 430px);
+  max-height: min(86vh, 620px);
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.block-color-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.block-color-editor-title {
+  margin: 0 0 4px;
+  text-align: left;
+}
+
+.block-color-editor-subtitle,
+.hex-editor-hint {
+  color: var(--theme-text-secondary);
+  font-size: 0.76rem;
+}
+
+.block-color-preview {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--theme-outline);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 16%, transparent);
+}
+
+.rgb-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.rgb-row {
+  display: grid;
+  grid-template-columns: 22px 34px minmax(80px, 1fr) 34px 64px;
+  align-items: center;
+  gap: 7px;
+}
+
+.rgb-channel-label {
+  color: var(--theme-text);
+  font-size: 0.94rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.rgb-step-button,
+.rgb-number,
+.hex-input {
+  border: 1px solid var(--theme-outline);
+  background: var(--theme-surface-2);
+  color: var(--theme-text);
+}
+
+.rgb-step-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.rgb-step-button:active {
+  background: var(--theme-active);
+}
+
+.rgb-number {
+  width: 64px;
+  height: 36px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rgb-range {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.rgb-row[data-channel="r"] .rgb-range { accent-color: #F44336; }
+.rgb-row[data-channel="g"] .rgb-range { accent-color: #34A853; }
+.rgb-row[data-channel="b"] .rgb-range { accent-color: #4285F4; }
+
+.hex-editor-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  color: var(--theme-text);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.hex-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.rgb-number:focus,
+.hex-input:focus {
+  border-color: var(--theme-accent);
+  outline: 2px solid color-mix(in srgb, var(--theme-accent) 26%, transparent);
+  outline-offset: 1px;
+}
+
+.hex-editor-hint {
+  margin: 6px 0 0 58px;
+}
+
+@media (max-width: 360px) {
+  .theme-color-grid {
+    gap: 5px;
+  }
+
+  .theme-color-button {
+    min-height: 62px;
+    font-size: 0.7rem;
+  }
+
+  .block-color-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rgb-row {
+    grid-template-columns: 20px 32px minmax(64px, 1fr) 32px 58px;
+    gap: 5px;
+  }
+
+  .rgb-step-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .rgb-number {
+    width: 58px;
+  }
+
+  .block-color-editor-box {
+    width: calc(100vw - 20px);
+    padding: 15px 12px;
+  }
+}
+
+/* ── Collapsed entry navigation ─────────────────────────────────────────── */
+.home-menu {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  margin-top: 1px;
+}
+
+.home-menu-button,
+.level-mode-button,
+.random-size-button {
+  width: 100%;
+  border: 1px solid var(--theme-outline);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.home-menu-button {
+  width: 75%;
+  min-height: 56px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-shadow) 45%, transparent);
+}
+
+.home-menu-button:active,
+.level-mode-button:active,
+.random-size-button:active {
+  background: var(--theme-surface-2);
+}
+
+.level-mode-button span,
+.random-size-button small,
+.subpage-description {
+  color: var(--theme-text-secondary);
+  font-size: 0.78rem;
+}
+
+.subpage-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 18px;
+}
+
+.subpage-header::after {
+  content: "";
+  width: 42px;
+  height: 42px;
+}
+
+.subpage-header h2 {
+  margin: 0;
+  text-align: center;
+  color: var(--theme-text);
+  font-size: 1.05rem;
+}
+
+.subpage-header .settings-back-button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 21px;
+  background: transparent;
+  color: var(--theme-text);
+}
+
+.subpage-description {
+  margin: -4px 4px 16px;
+  line-height: 1.5;
+}
+
+.level-mode-list {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+}
+
+.level-mode-button {
+  width: 75%;
+  min-height: 56px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-shadow) 45%, transparent);
+}
+
+.level-mode-button.future-mode-button {
+  opacity: 0.52;
+  cursor: default;
+}
+
+.random-size-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.random-size-button {
+  position: relative;
+  min-height: 72px;
+  padding: 12px 10px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.random-size-button .random-progress-heart {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  color: #ff2d2d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .42);
+  pointer-events: none;
+}
+
+.random-size-button strong {
+  font-size: 1rem;
+}
+
+.random-size-button small {
+  display: grid;
+  gap: 2px;
+}
+
+.random-size-stars {
+  color: #ffd75a;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+
+/* ── Cell-style page and live preview ───────────────────────────────────── */
+#screen-styles #cell-style-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#screen-styles #cell-style-buttons .cell-style-button {
+  min-height: 48px;
+  border: 1px solid var(--theme-outline);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+}
+
+#screen-styles #cell-style-buttons .cell-style-button.selected {
+  background: var(--theme-accent-soft);
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 1px;
+}
+
+.style-mark-dimming-setting {
+  margin-top: 12px;
+}
+
+.style-preview-section {
+  margin-top: 24px;
+}
+
+.style-preview-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--theme-text-secondary);
+  font-size: 0.82rem;
+}
+
+.style-preview-heading strong {
+  color: var(--theme-text);
+  font-size: 0.9rem;
+}
+
+.style-preview-frame {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border: 1px solid var(--theme-outline);
+  border-radius: 16px;
+  background: var(--theme-surface);
+}
+
+.style-preview-board {
+  width: min(64vw, 240px);
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  pointer-events: none;
+  cursor: default;
+}
+
+.style-preview-board .cell {
+  cursor: default;
+}
+
+@media (max-width: 360px) {
+  .reminder-icon-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-menu {
+    gap: 1px;
+    margin-top: 1px;
+  }
+
+  .home-menu-button {
+    width: 75%;
+    min-height: 52px;
+    padding: 10px 12px;
+  }
+
+  .random-size-grid {
+    gap: 8px;
+  }
+}
+
+
+.reminder-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.reminder-icon-card {
+  border: 1px solid var(--theme-outline);
+  background: color-mix(in srgb, var(--theme-surface) 92%, transparent);
+  color: var(--theme-text);
+  border-radius: 18px;
+  padding: 18px 14px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-shadow) 36%, transparent);
+  cursor: pointer;
+}
+
+.reminder-icon-card.selected {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent) 32%, transparent), 0 8px 22px color-mix(in srgb, var(--theme-shadow) 36%, transparent);
+}
+
+.reminder-icon-card:active {
+  background: var(--theme-surface-2);
+}
+
+.reminder-icon-preview {
+  display: block;
+  width: 92px;
+  height: 92px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.reminder-icon-preview-paw { background-image: url("images/UI/cat_footprints.png"); }
+.reminder-icon-preview-fish { background-image: url("images/UI/Fish_bone.png"); }
+
+.reminder-icon-meta {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.reminder-icon-meta strong {
+  font-size: 1rem;
+}
+
+.reminder-icon-meta small {
+  color: var(--theme-text-secondary);
+}
+
+
+/* Dark theme: regular controls use the brighter unified button colour.
+   Navigation icon buttons remain transparent. */
+html[data-theme-mode="dark"] .button-grid button,
+html[data-theme-mode="dark"] .game-toolbar button:not(.icon-button),
+html[data-theme-mode="dark"] .setting-toggle,
+html[data-theme-mode="dark"] .settings-link,
+html[data-theme-mode="dark"] .settings-dangerless-button,
+html[data-theme-mode="dark"] .theme-mode-button,
+html[data-theme-mode="dark"] .theme-color-button,
+html[data-theme-mode="dark"] .home-menu-button,
+html[data-theme-mode="dark"] .level-mode-button,
+html[data-theme-mode="dark"] .random-size-button,
+html[data-theme-mode="dark"] .rgb-step-button,
+html[data-theme-mode="dark"] .reminder-icon-card,
+html[data-theme-mode="dark"] .modal-buttons button.secondary {
+  background: #5667F0;
+  color: #FFFFFF;
+}
+
+html[data-theme-mode="dark"] .button-grid button:active,
+html[data-theme-mode="dark"] .game-toolbar button:not(.icon-button):active,
+html[data-theme-mode="dark"] .setting-toggle:active,
+html[data-theme-mode="dark"] .settings-link:active,
+html[data-theme-mode="dark"] .settings-dangerless-button:active,
+html[data-theme-mode="dark"] .theme-mode-button:active,
+html[data-theme-mode="dark"] .theme-color-button:active,
+html[data-theme-mode="dark"] .home-menu-button:active,
+html[data-theme-mode="dark"] .level-mode-button:active,
+html[data-theme-mode="dark"] .random-size-button:active,
+html[data-theme-mode="dark"] .rgb-step-button:active,
+html[data-theme-mode="dark"] .reminder-icon-card:active,
+html[data-theme-mode="dark"] .modal-buttons button.secondary:active {
+  background: #6C7BFF;
+}
+
+/* Selected/accent controls keep their theme accent; disabled toggles stay visually muted. */
+html[data-theme-mode="dark"] .game-toolbar button.off,
+html[data-theme-mode="dark"] .setting-toggle.off {
+  background: color-mix(in srgb, #5667F0 42%, #00042B);
+  color: var(--theme-text-disabled);
+}
+
+
+/* ── v16 navigation sizing / game backgrounds ─────────────────────────── */
+/* Only the actual game board uses the reduced-decoration game background. */
+html[data-theme-mode="dark"] body[data-app-screen="game"] {
+  --game-board-background-image: url("images/UI/background_Darkcolora.png");
+  --theme-background-image: var(--game-map-background-image, var(--game-board-background-image));
+}
+
+html[data-theme-mode="light"] body[data-app-screen="game"] {
+  --game-board-background-image: url("images/UI/background_Darkcolora.png");
+  --theme-background-image: var(--game-map-background-image, var(--game-board-background-image));
+}
+
+/* Other pages always return to the normal decorative background. */
+html[data-theme-mode="dark"] body:not([data-app-screen="game"]) {
+  --theme-background-image: url("images/UI/background_Darkcolor.png");
+}
+
+html[data-theme-mode="light"] body:not([data-app-screen="game"]) {
+  --theme-background-image: url("images/UI/background_Lightcolor.png");
+}
+
+/* Other-page navigation icons: 34px -> 68px (2x). */
+.subpage-header .theme-nav-icon,
+.game-nav-row .theme-nav-icon {
+  width: 68px !important;
+  height: 68px !important;
+}
+
+.subpage-header .settings-back-button,
+.game-nav-row .icon-button {
+  width: 74px !important;
+  height: 74px !important;
+  padding: 3px !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 72%, transparent) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--theme-surface) 80%, white 20%),
+    color-mix(in srgb, var(--theme-surface) 88%, black 12%)) !important;
+  box-shadow:
+    inset 2px 2px 3px color-mix(in srgb, white 28%, transparent),
+    inset -2px -2px 3px color-mix(in srgb, black 22%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-shadow) 72%, transparent),
+    0 8px 14px color-mix(in srgb, var(--theme-shadow) 48%, transparent) !important;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+}
+
+.subpage-header .settings-back-button:active,
+.game-nav-row .icon-button:active {
+  transform: translateY(4px);
+  box-shadow:
+    inset 2px 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset -1px -1px 2px color-mix(in srgb, white 18%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 55%, transparent) !important;
+}
+
+.subpage-header .theme-nav-icon,
+.game-nav-row .theme-nav-icon {
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.30));
+}
+
+.subpage-header {
+  grid-template-columns: 74px minmax(0, 1fr) 74px !important;
+  min-height: 74px;
+}
+
+.subpage-header::after {
+  width: 74px !important;
+  height: 74px !important;
+}
+
+/* Settings-family pages: 34px -> 136px (4x). */
+.settings-header {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+  min-height: 142px;
+}
+
+.settings-header .settings-back-button {
+  justify-self: start;
+  width: 142px !important;
+  height: 142px !important;
+  padding: 3px !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 72%, transparent) !important;
+  border-radius: 30px !important;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--theme-surface) 80%, white 20%),
+    color-mix(in srgb, var(--theme-surface) 88%, black 12%)) !important;
+  box-shadow:
+    inset 3px 3px 5px color-mix(in srgb, white 28%, transparent),
+    inset -3px -3px 5px color-mix(in srgb, black 22%, transparent),
+    0 7px 0 color-mix(in srgb, var(--theme-shadow) 72%, transparent),
+    0 11px 18px color-mix(in srgb, var(--theme-shadow) 48%, transparent) !important;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out;
+}
+
+.settings-header .settings-back-button:active {
+  transform: translateY(5px);
+  box-shadow:
+    inset 3px 3px 6px color-mix(in srgb, black 18%, transparent),
+    inset -1px -1px 3px color-mix(in srgb, white 18%, transparent),
+    0 2px 0 color-mix(in srgb, var(--theme-shadow) 55%, transparent) !important;
+}
+
+.settings-header .theme-nav-icon {
+  width: 136px !important;
+  height: 136px !important;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.32));
+}
+
+.settings-header::after {
+  justify-self: end;
+  width: 142px !important;
+  height: 142px !important;
+}
+
+/* Keep the lower-left decorative cat unobstructed at the end of level lists. */
+body[data-app-screen="fixed-select"] #screen-select,
+body[data-app-screen="random-select"] #screen-random-select,
+body[data-app-screen="level-modes"] #screen-level-modes {
+  padding-bottom: clamp(230px, 48vw, 330px);
+}
+
+/* Tile style already communicates MARK by physically sinking the tile. */
+body[data-cell-style="tile"] .cell[data-state="1"] .mark {
+  display: none !important;
+}
+
+@media (max-width: 400px) {
+  .subpage-header .settings-back-button,
+  .game-nav-row .icon-button {
+    width: 74px !important;
+    height: 74px !important;
+  }
+
+  .settings-header .settings-back-button {
+    width: 142px !important;
+    height: 142px !important;
+  }
+}
+
+/* ── v17 UI refinements ───────────────────────────────────────────────── */
+/* Settings-family back buttons now match the normal navigation size. */
+.settings-header {
+  grid-template-columns: 74px minmax(0, 1fr) 74px !important;
+  min-height: 74px !important;
+}
+
+.settings-header .settings-back-button {
+  width: 74px !important;
+  height: 74px !important;
+  padding: 3px !important;
+  border-radius: 20px !important;
+  box-shadow:
+    inset 2px 2px 3px color-mix(in srgb, white 28%, transparent),
+    inset -2px -2px 3px color-mix(in srgb, black 22%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-shadow) 72%, transparent),
+    0 8px 14px color-mix(in srgb, var(--theme-shadow) 48%, transparent) !important;
+}
+
+.settings-header .settings-back-button:active {
+  transform: translateY(4px) !important;
+  box-shadow:
+    inset 2px 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset -1px -1px 2px color-mix(in srgb, white 18%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 55%, transparent) !important;
+}
+
+.settings-header .theme-nav-icon {
+  width: 68px !important;
+  height: 68px !important;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.30));
+}
+
+.settings-header::after {
+  width: 74px !important;
+  height: 74px !important;
+}
+
+/* The six large entry buttons share a raised 3D surface. */
+.home-menu-button,
+.level-mode-button {
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 78%, transparent) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--theme-surface) 88%, white 12%) 0%,
+    var(--theme-surface) 55%,
+    color-mix(in srgb, var(--theme-surface) 88%, black 12%) 100%) !important;
+  box-shadow:
+    inset 0 2px 2px color-mix(in srgb, white 26%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 14%, transparent),
+    0 6px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 10px 18px color-mix(in srgb, var(--theme-shadow) 36%, transparent) !important;
+  transform: translateY(0);
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+}
+
+.home-menu-button:active,
+.level-mode-button:not(:disabled):active {
+  transform: translateY(5px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 16%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 16%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 52%, transparent) !important;
+}
+
+html[data-theme-mode="dark"] .home-menu-button,
+html[data-theme-mode="dark"] .level-mode-button {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  border-color: #8A95FF !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255, 255, 255, 0.24),
+    inset 0 -2px 2px rgba(0, 0, 50, 0.22),
+    0 6px 0 #2F3ABB,
+    0 10px 18px rgba(0, 0, 0, 0.34) !important;
+}
+
+html[data-theme-mode="dark"] .home-menu-button:active,
+html[data-theme-mode="dark"] .level-mode-button:not(:disabled):active {
+  background: linear-gradient(180deg, #4654E8 0%, #3542D5 100%) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 45, 0.26),
+    0 1px 0 #202AA8 !important;
+}
+
+.level-mode-button.future-mode-button {
+  transform: none !important;
+  box-shadow:
+    inset 0 1px 2px color-mix(in srgb, white 12%, transparent),
+    0 3px 0 color-mix(in srgb, var(--theme-shadow) 42%, transparent) !important;
+}
+
+/* Level selection lives inside a dedicated scroll frame that ends above the
+   lower-left decorative cat. More levels scroll inside the frame instead of
+   extending the page over the cat. */
+body[data-app-screen="fixed-select"] #screen-select,
+body[data-app-screen="random-select"] #screen-random-select {
+  padding-bottom: 0 !important;
+}
+
+.level-selection-panel {
+  --cat-reserved-height: clamp(215px, 47vw, 300px);
+  max-height: max(220px, calc(100dvh - var(--cat-reserved-height) - 190px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 4px 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 88%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--theme-surface) 90%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+    0 8px 20px color-mix(in srgb, var(--theme-shadow) 30%, transparent);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.level-selection-panel h2:first-child {
+  margin-top: 12px;
+}
+
+.random-selection-panel {
+  padding-top: 14px;
+}
+
+.random-selection-panel .subpage-description {
+  margin-top: 0;
+}
+
+@media (max-width: 400px) {
+  .settings-header .settings-back-button,
+  .subpage-header .settings-back-button,
+  .game-nav-row .icon-button {
+    width: 74px !important;
+    height: 74px !important;
+  }
+
+  .settings-header .theme-nav-icon,
+  .subpage-header .theme-nav-icon,
+  .game-nav-row .theme-nav-icon {
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  .level-selection-panel {
+    --cat-reserved-height: clamp(205px, 54vw, 270px);
+    max-height: max(210px, calc(100dvh - var(--cat-reserved-height) - 182px));
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}
+
+
+/* v18: split fixed level selection into three separate blocks */
+.three-block-select {
+  --cat-safe-height: clamp(215px, 47vw, 300px);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.selection-block {
+  padding: 12px 14px 14px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 88%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--theme-surface) 90%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+    0 8px 20px color-mix(in srgb, var(--theme-shadow) 30%, transparent);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.selection-block > h2 {
+  margin: 0 0 10px;
+}
+
+.selection-block .button-grid {
+  margin-top: 0;
+}
+
+#screen-history .subpage-header {
+  margin: 4px 0 8px;
+}
+
+.history-stats {
+  height: var(--history-available-height, 52dvh);
+  container-type: size;
+  display: grid;
+  grid-template-rows: minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, .65fr) minmax(0, 1.35fr);
+  gap: clamp(3px, calc(var(--history-available-height, 52dvh) * .015), 10px);
+  padding: 0;
+}
+
+.history-card {
+  display: grid;
+  gap: 8px;
+}
+
+.history-stats > .history-card {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(3px, 1.2cqh, 8px) clamp(6px, 2cqh, 12px);
+  gap: clamp(2px, 1cqh, 5px);
+  grid-template-rows: auto minmax(0, 1fr);
+  font-size: clamp(10px, 3.8cqh, 14px);
+  line-height: 1.15;
+}
+
+.history-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+}
+
+.history-card-heading h2,
+#screen-history .history-card-title,
+#screen-history .history-total-card > h2 {
+  margin: 0;
+  font-size: clamp(11px, 4.3cqh, 17px);
+}
+
+.history-paw-total {
+  display: inline-flex;
+  align-items: center;
+  gap: .25em;
+  white-space: nowrap;
+  font-size: clamp(9px, 3cqh, 12px);
+}
+
+.level-book-progress.history-progress-summary {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 2px 5px;
+  grid-template-columns: clamp(30px, 15cqh, 58px) minmax(0, 1fr);
+  gap: clamp(4px, 1.5cqh, 8px);
+  font-size: inherit;
+}
+
+.history-progress-summary .level-book-progress-ring {
+  width: 100%;
+}
+
+.history-progress-summary .level-book-progress-ring strong {
+  font-size: inherit;
+}
+
+.history-progress-summary .level-book-progress-stats span {
+  min-width: 0;
+  gap: 4px;
+  padding: 0;
+}
+
+.history-progress-summary .level-book-progress-stats b {
+  white-space: nowrap;
+}
+
+#screen-history .history-link-row,
+#screen-history .history-stat-row {
+  min-width: 0;
+  min-height: 0;
+  padding: 2px 5px;
+  gap: 6px;
+}
+
+#screen-history .history-total-card {
+  grid-template-rows: auto repeat(3, minmax(0, 1fr));
+}
+
+#screen-history .history-stat-row > span {
+  flex-shrink: 0;
+}
+
+#screen-history .history-stat-row strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.history-card-title {
+  color: var(--theme-text);
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+.history-link-card {
+  width: 100%;
+  color: var(--theme-text);
+  font: inherit;
+  text-align: left;
+}
+
+.history-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--theme-surface-2);
+  color: var(--theme-text-secondary);
+}
+
+.history-link-row strong {
+  color: var(--theme-text);
+  white-space: nowrap;
+}
+
+.history-random-list {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: start;
+  gap: 6px;
+  padding: 0 2px max(8px, env(safe-area-inset-bottom, 0px));
+}
+
+.random-history-card {
+  width: min(96%, 500px);
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 44%) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+  pointer-events: none;
+}
+
+.random-history-card:last-child:nth-child(odd) {
+  width: min(96%, 500px);
+  grid-column: auto;
+}
+
+.random-history-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, .42));
+}
+
+.random-history-stats {
+  align-self: stretch;
+  padding: 4px 9px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid rgba(255, 255, 255, .66);
+  border-radius: 10px;
+  background: rgba(8, 20, 34, .82);
+  color: #fff;
+  font-size: clamp(.62rem, 2.7vw, .76rem);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px #000;
+}
+
+.random-history-stats span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 1px 4px;
+}
+
+.random-history-stats span + span {
+  border-top: 1px solid rgba(255, 255, 255, .35);
+}
+
+.random-history-stats b {
+  color: #fff3d0;
+}
+
+.random-history-stats strong {
+  color: #fff;
+  text-align: right;
+  white-space: nowrap;
+}
+
+#screen-history-random .random-selection-panel {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+}
+
+#screen-history-random .random-selection-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.history-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--theme-surface-2);
+  color: var(--theme-text-secondary);
+}
+
+.history-stat-row strong {
+  color: var(--theme-text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.level-selection-block {
+  min-height: clamp(180px, 24vh, 300px);
+  max-height: calc(100dvh - 395px - var(--cat-safe-height) - env(safe-area-inset-bottom, 0px) - 1px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  margin-bottom: calc(var(--cat-safe-height) + 1px);
+}
+
+body[data-app-screen="fixed-select"] #screen-select {
+  padding-bottom: 0 !important;
+}
+
+body[data-app-screen="fixed-select"] #screen-select .three-block-select {
+  padding-bottom: 0;
+}
+
+@media (max-width: 400px) {
+  .selection-block {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .level-selection-block {
+    max-height: calc(100dvh - 368px - var(--cat-safe-height) - env(safe-area-inset-bottom, 0px) - 1px);
+  }
+}
+
+
+/* v19: increase contrast for light-theme selection panels */
+html[data-theme-mode="light"] .selection-block,
+html[data-theme-mode="light"] .level-selection-panel {
+  background: #E5DDBF !important;
+  border-color: #CDBB8A !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 8px 20px rgba(120, 98, 38, 0.16) !important;
+}
+
+html[data-theme-mode="light"] .selection-block > h2,
+html[data-theme-mode="light"] .level-selection-panel h2,
+html[data-theme-mode="light"] .random-selection-panel .subpage-description {
+  color: #5E5231;
+}
+
+
+/* v20 title image */
+@media (max-width: 400px) {
+  .app-header-title {
+    width: min(90vw, 390px);
+  }
+}
+
+/* v21 compact title and 1px block spacing */
+#screen-home,
+#screen-level-mode,
+#screen-select {
+  padding-top: 0;
+}
+
+
+/* v22: rebalance home/level-mode spacing and shrink nav icon buttons to 80% */
+#screen-home {
+  min-height: calc(100dvh - 200px - env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#screen-home .home-menu {
+  width: 100%;
+  gap: 4px !important;
+  margin-top: 0 !important;
+}
+
+#screen-level-mode .level-mode-list {
+  gap: 4px !important;
+}
+
+/* 80% of the current 74px/68px navigation sizing */
+.subpage-header,
+.settings-header {
+  grid-template-columns: 60px minmax(0, 1fr) 60px !important;
+  min-height: 60px !important;
+}
+
+.subpage-header::after,
+.settings-header::after {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.subpage-header .settings-back-button,
+.game-nav-row .icon-button,
+.settings-header .settings-back-button {
+  width: 60px !important;
+  height: 60px !important;
+  padding: 2px !important;
+  border-radius: 16px !important;
+}
+
+.subpage-header .theme-nav-icon,
+.game-nav-row .theme-nav-icon,
+.settings-header .theme-nav-icon {
+  width: 54px !important;
+  height: 54px !important;
+}
+
+.subpage-header .settings-back-button:active,
+.game-nav-row .icon-button:active,
+.settings-header .settings-back-button:active {
+  transform: translateY(3px) !important;
+}
+
+@media (max-width: 400px) {
+  #screen-home {
+    min-height: calc(100dvh - 180px - env(safe-area-inset-bottom, 0px));
+  }
+
+  .subpage-header,
+  .settings-header {
+    grid-template-columns: 60px minmax(0, 1fr) 60px !important;
+    min-height: 60px !important;
+  }
+
+  .subpage-header::after,
+  .settings-header::after {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .subpage-header .settings-back-button,
+  .game-nav-row .icon-button,
+  .settings-header .settings-back-button {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .subpage-header .theme-nav-icon,
+  .game-nav-row .theme-nav-icon,
+  .settings-header .theme-nav-icon {
+    width: 54px !important;
+    height: 54px !important;
+  }
+}
+
+
+/* v23: loosen spacing between the three home buttons */
+#screen-home {
+  min-height: calc(100dvh - 180px - env(safe-area-inset-bottom, 0px));
+}
+
+#screen-home .home-menu {
+  gap: 12px !important;
+  margin-top: 24px !important;
+}
+
+@media (max-width: 400px) {
+  #screen-home {
+    min-height: calc(100dvh - 165px - env(safe-area-inset-bottom, 0px));
+  }
+
+  #screen-home .home-menu {
+    gap: 12px !important;
+    margin-top: 20px !important;
+  }
+}
+
+
+/* v25: home and level-mode entry buttons share the exact same spacing. */
+:root {
+  --entry-button-gap: 24px;
+}
+
+#screen-home .home-menu,
+#screen-level-modes .level-mode-list {
+  gap: var(--entry-button-gap) !important;
+}
+
+@media (max-width: 400px) {
+  #screen-home .home-menu,
+  #screen-level-modes .level-mode-list {
+    gap: var(--entry-button-gap) !important;
+  }
+}
+
+
+/* v26: 3D treatment for level-selection controls and in-game action buttons. */
+#size-buttons button,
+#stage-buttons button,
+#level-buttons button,
+.random-size-button,
+.game-toolbar.tool-row button {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 78%, transparent) !important;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 22%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 58%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+  transform: translateY(0);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 80ms ease-out;
+}
+
+#size-buttons button:active,
+#stage-buttons button:active,
+#level-buttons button:active,
+.random-size-button:active,
+.game-toolbar.tool-row button:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 16%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 14%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 48%, transparent) !important;
+}
+
+/* Selected controls keep a lifted edge while preserving their existing colours. */
+#size-buttons button.selected,
+#stage-buttons .stage-button.selected,
+#level-buttons button.selected,
+.game-toolbar.tool-row button.tool-toggle:not(.off) {
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 25%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 14%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-accent) 45%, var(--theme-shadow)),
+    0 0 0 1px color-mix(in srgb, var(--theme-accent) 38%, transparent),
+    0 7px 10px color-mix(in srgb, var(--theme-shadow) 30%, transparent) !important;
+}
+
+/* Dark theme gets a clearer lower edge without replacing stage/progress colours. */
+html[data-theme-mode="dark"] #size-buttons button,
+html[data-theme-mode="dark"] #level-buttons button,
+html[data-theme-mode="dark"] .random-size-button,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button {
+  border-color: rgba(120, 132, 255, 0.62) !important;
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.22),
+    inset 0 -2px 2px rgba(0, 0, 60, 0.20),
+    0 4px 0 #202AA8,
+    0 7px 10px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme-mode="dark"] #stage-buttons .stage-button {
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.18),
+    inset 0 -2px 2px rgba(0, 0, 0, 0.18),
+    0 4px 0 rgba(15, 20, 44, 0.78),
+    0 7px 10px rgba(0, 0, 0, 0.24) !important;
+}
+
+html[data-theme-mode="dark"] #size-buttons button:active,
+html[data-theme-mode="dark"] #stage-buttons button:active,
+html[data-theme-mode="dark"] #level-buttons button:active,
+html[data-theme-mode="dark"] .random-size-button:active,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 55, 0.26),
+    0 1px 0 #202AA8 !important;
+}
+
+
+/* v27: unify the three in-game tool buttons to the hypo-button colour */
+.game-toolbar.tool-row button,
+.game-toolbar.tool-row button.tool-toggle,
+.game-toolbar.tool-row button.off,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button.tool-toggle,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button.off {
+  background: var(--theme-accent) !important;
+  color: var(--theme-on-accent) !important;
+  border-color: color-mix(in srgb, var(--theme-accent) 60%, var(--theme-outline)) !important;
+}
+
+.game-toolbar.tool-row button:active,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button:active {
+  background: color-mix(in srgb, var(--theme-accent) 86%, black) !important;
+  color: var(--theme-on-accent) !important;
+}
+
+.game-toolbar.tool-row button .hypo-tool-label {
+  color: inherit;
+}
+
+
+/* v28: make all three in-game tool buttons match the current hypo-button grey scheme */
+.game-toolbar.tool-row button,
+.game-toolbar.tool-row button.tool-toggle,
+.game-toolbar.tool-row button.off,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button.tool-toggle,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button.off {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 18%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+
+.game-toolbar.tool-row button:active,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button:active {
+  background: var(--theme-surface-2) !important;
+  color: var(--theme-text) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+.game-toolbar.tool-row button .hypo-tool-label,
+.game-toolbar.tool-row button .hypo-tool-icon {
+  color: inherit;
+}
+
+
+/* v29: keep the same colour family, but restore raised/sunken state for in-game toggles */
+.game-toolbar.tool-row button {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 18%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+
+/* Restart remains raised. Toggle buttons sink only when disabled/off. */
+.game-toolbar.tool-row button.tool-toggle.off,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button.tool-toggle.off {
+  background: var(--theme-surface-2) !important;
+  color: var(--theme-text-secondary) !important;
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 20%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 8%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 18%, transparent) !important;
+}
+
+.game-toolbar.tool-row button.tool-toggle:not(.off),
+html[data-theme-mode="dark"] .game-toolbar.tool-row button.tool-toggle:not(.off) {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 20%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+
+.game-toolbar.tool-row button:active,
+html[data-theme-mode="dark"] .game-toolbar.tool-row button:active {
+  background: var(--theme-surface-2) !important;
+  color: var(--theme-text) !important;
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+.game-toolbar.tool-row button.tool-toggle.off .hypo-tool-label,
+.game-toolbar.tool-row button.tool-toggle.off .hypo-tool-icon {
+  opacity: 0.82;
+}
+
+
+/* v30: fixed accent per light/dark mode; user accent selector removed. */
+html[data-theme-mode="dark"] {
+  --theme-accent: #5667F0 !important;
+  --theme-accent-strong: #4252D4 !important;
+  --theme-on-accent: #FFFFFF !important;
+}
+
+html[data-theme-mode="light"] {
+  --theme-accent: #3B49E3 !important;
+  --theme-accent-strong: #2D39C5 !important;
+  --theme-on-accent: #FFFFFF !important;
+}
+
+
+/* v31: settings page all buttons get 3D styling; theme/sound/vibration use raised-on / sunken-off */
+#screen-settings .settings-back-button,
+#screen-settings .settings-link,
+#screen-settings .theme-mode-button,
+#screen-settings .setting-toggle {
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+/* Back button: 3D icon button */
+#screen-settings .settings-back-button {
+  background: var(--theme-surface) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 18%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+#screen-settings .settings-back-button:active {
+  transform: translateY(3px);
+  background: var(--theme-surface-2) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 10%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+/* General 3D buttons on the settings page */
+#screen-settings .settings-link,
+#screen-settings .theme-mode-button,
+#screen-settings .setting-toggle {
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+}
+
+#screen-settings .settings-link {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 18%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+#screen-settings .settings-link:active {
+  transform: translateY(3px);
+  background: var(--theme-surface-2) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+/* Theme mode and game setting toggles: same family as the hypo button */
+#screen-settings .theme-mode-button,
+#screen-settings .setting-toggle {
+  background: var(--theme-surface-2) !important;
+  color: var(--theme-text-secondary) !important;
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 20%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 8%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 18%, transparent) !important;
+}
+
+#screen-settings .theme-mode-button.selected,
+#screen-settings .setting-toggle:not(.off) {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 20%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+
+#screen-settings .theme-mode-button:active,
+#screen-settings .setting-toggle:active {
+  transform: translateY(3px);
+  background: var(--theme-surface-2) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+#screen-settings .setting-toggle.off span,
+#screen-settings .theme-mode-button:not(.selected) {
+  opacity: 0.9;
+}
+
+#screen-settings .settings-link small {
+  color: var(--theme-text-secondary);
+}
+
+html[data-theme-mode="dark"] #screen-settings .settings-back-button,
+html[data-theme-mode="dark"] #screen-settings .settings-link,
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button,
+html[data-theme-mode="dark"] #screen-settings .setting-toggle {
+  background-image: none;
+}
+
+
+/* v32: reverse only theme mode buttons on the settings page.
+   Active(selected) = sunken, inactive = raised. */
+#screen-settings .theme-mode-button {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 20%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+}
+
+#screen-settings .theme-mode-button.selected {
+  background: var(--theme-surface-2) !important;
+  color: var(--theme-text-secondary) !important;
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 20%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 8%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 18%, transparent) !important;
+}
+
+#screen-settings .theme-mode-button:active {
+  transform: translateY(3px);
+  background: var(--theme-surface-2) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+#screen-settings .theme-mode-button:not(.selected) {
+  opacity: 1;
+}
+
+#screen-settings .theme-mode-button.selected {
+  opacity: 0.92;
+}
+
+
+/* v34: selected size/stage buttons sink; changing size rebuilds stages unselected. */
+#size-buttons button.selected,
+#stage-buttons .stage-button.selected {
+  transform: translateY(3px) !important;
+  filter: brightness(0.92);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 20%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 10%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 54%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 18%, transparent) !important;
+}
+
+#size-buttons button:not(.selected),
+#stage-buttons .stage-button:not(.selected) {
+  transform: translateY(0) !important;
+  filter: none;
+}
+
+#size-buttons button.selected:active,
+#stage-buttons .stage-button.selected:active {
+  transform: translateY(3px) !important;
+}
+
+
+/* v35: selection buttons use a fixed baseline. Unselected buttons rise above
+   the panel; selected buttons return to the panel plane instead of dropping
+   below their layout position. Shadows are strengthened for both themes. */
+#size-buttons button:not(.selected),
+#stage-buttons .stage-button:not(.selected) {
+  transform: translateY(-2px) !important;
+  filter: none;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 24%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 14%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-shadow) 78%, black 12%),
+    0 9px 12px color-mix(in srgb, var(--theme-shadow) 44%, transparent) !important;
+}
+
+#size-buttons button.selected,
+#stage-buttons .stage-button.selected {
+  transform: translateY(0) !important;
+  filter: brightness(0.93);
+  box-shadow:
+    inset 0 3px 5px color-mix(in srgb, black 24%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 1px color-mix(in srgb, var(--theme-shadow) 38%, transparent) !important;
+}
+
+/* Pressing a raised button moves it onto the same baseline used by selection. */
+#size-buttons button:not(.selected):active,
+#stage-buttons .stage-button:not(.selected):active {
+  transform: translateY(0) !important;
+  box-shadow:
+    inset 0 3px 5px color-mix(in srgb, black 22%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 1px color-mix(in srgb, var(--theme-shadow) 38%, transparent) !important;
+}
+
+#size-buttons button.selected:active,
+#stage-buttons .stage-button.selected:active {
+  transform: translateY(0) !important;
+}
+
+/* Dark panels need a visibly darker lower lip; the old blue edge blended
+   into the dark-blue page background. */
+html[data-theme-mode="dark"] #size-buttons button:not(.selected),
+html[data-theme-mode="dark"] #stage-buttons .stage-button:not(.selected) {
+  box-shadow:
+    inset 0 2px 1px rgba(255,255,255,.24),
+    inset 0 -2px 2px rgba(0,0,30,.24),
+    0 5px 0 rgba(3,6,28,.92),
+    0 9px 13px rgba(0,0,0,.42) !important;
+}
+
+html[data-theme-mode="dark"] #size-buttons button.selected,
+html[data-theme-mode="dark"] #stage-buttons .stage-button.selected {
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,25,.42),
+    inset 0 -1px 1px rgba(255,255,255,.10),
+    0 1px 1px rgba(0,0,0,.30) !important;
+}
+
+/* Light panels also need enough contrast against the beige selection card. */
+html[data-theme-mode="light"] #size-buttons button:not(.selected),
+html[data-theme-mode="light"] #stage-buttons .stage-button:not(.selected) {
+  box-shadow:
+    inset 0 2px 1px rgba(255,255,255,.52),
+    inset 0 -2px 2px rgba(95,78,34,.15),
+    0 5px 0 rgba(99,82,39,.34),
+    0 9px 12px rgba(83,67,27,.20) !important;
+}
+
+html[data-theme-mode="light"] #size-buttons button.selected,
+html[data-theme-mode="light"] #stage-buttons .stage-button.selected {
+  box-shadow:
+    inset 0 3px 5px rgba(83,67,27,.24),
+    inset 0 -1px 1px rgba(255,255,255,.34),
+    0 1px 1px rgba(83,67,27,.18) !important;
+}
+
+/* v36: selection cleanup and global settings shortcuts. */
+/* Stage selection now communicates state through the recessed 3D effect only. */
+#stage-buttons .stage-button.selected {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+/* In light mode, selected board size remains beige and simply darkens/recesses. */
+html[data-theme-mode="light"] #size-buttons button.selected {
+  background: color-mix(in srgb, var(--theme-surface) 86%, #81734A 14%) !important;
+  color: var(--theme-text) !important;
+}
+
+/* Non-home/non-settings pages use the same left-back/right-settings layout as the game page. */
+.subpage-header.has-settings-button::after,
+.settings-header.has-settings-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+.subpage-header .page-settings-button,
+.settings-header .page-settings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  width: 60px !important;
+  height: 60px !important;
+  padding: 2px !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 72%, transparent) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--theme-surface) 80%, white 20%),
+    color-mix(in srgb, var(--theme-surface) 88%, black 12%)) !important;
+  color: var(--theme-text);
+  box-shadow:
+    inset 2px 2px 3px color-mix(in srgb, white 28%, transparent),
+    inset -2px -2px 3px color-mix(in srgb, black 22%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-shadow) 72%, transparent),
+    0 8px 14px color-mix(in srgb, var(--theme-shadow) 48%, transparent) !important;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+}
+
+.subpage-header .page-settings-button .theme-nav-icon,
+.settings-header .page-settings-button .theme-nav-icon {
+  width: 54px !important;
+  height: 54px !important;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.30));
+}
+
+.subpage-header .page-settings-button:active,
+.settings-header .page-settings-button:active {
+  transform: translateY(3px) !important;
+  box-shadow:
+    inset 2px 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset -1px -1px 2px color-mix(in srgb, white 18%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 55%, transparent) !important;
+}
+
+/* Settings-family subpages also keep a true three-column nav when a gear is present. */
+.settings-header.has-settings-button,
+.subpage-header.has-settings-button {
+  grid-template-columns: 60px minmax(0, 1fr) 60px !important;
+}
+
+.settings-version {
+  margin: -10px 0 24px;
+  color: var(--theme-text-secondary);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+
+/* v38: the Dark theme selector uses the same palette as the dark home buttons. */
+#screen-settings .theme-mode-button[data-theme-mode="dark"] {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #8A95FF !important;
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.24),
+    inset 0 -2px 2px rgba(0,0,50,.22),
+    0 6px 0 #2F3ABB,
+    0 10px 18px rgba(0,0,0,.34) !important;
+}
+
+#screen-settings .theme-mode-button[data-theme-mode="dark"].selected,
+#screen-settings .theme-mode-button[data-theme-mode="dark"]:active {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  transform: translateY(3px);
+  filter: brightness(.88);
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,45,.34),
+    inset 0 -1px 1px rgba(255,255,255,.12),
+    0 1px 0 rgba(26,34,112,.72),
+    0 2px 5px rgba(0,0,0,.20) !important;
+}
+
+
+/* v39: dark-theme settings controls use the same light-blue family as the
+   raised Dark selector/home buttons. State is communicated by depth, not by
+   switching back to the old deep-navy button colour. */
+html[data-theme-mode="dark"] #screen-settings {
+  --settings-button-top: #7A87FF;
+  --settings-button-mid: #5667F0;
+  --settings-button-bottom: #4252D4;
+  --settings-button-border: #8A95FF;
+  --settings-button-lip: #2F3ABB;
+}
+
+html[data-theme-mode="dark"] #screen-settings .settings-back-button,
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button,
+html[data-theme-mode="dark"] #screen-settings .setting-toggle,
+html[data-theme-mode="dark"] #screen-settings .settings-link {
+  background: linear-gradient(180deg,
+    var(--settings-button-top) 0%,
+    var(--settings-button-mid) 56%,
+    var(--settings-button-bottom) 100%) !important;
+  color: #FFFFFF !important;
+  border-color: var(--settings-button-border) !important;
+  filter: none;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.24),
+    inset 0 -2px 2px rgba(0,0,50,.22),
+    0 5px 0 var(--settings-button-lip),
+    0 9px 15px rgba(0,0,0,.30) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings .settings-link strong,
+html[data-theme-mode="dark"] #screen-settings .settings-link small {
+  color: #FFFFFF !important;
+}
+
+/* Theme selector: selected = pressed down, the other choice = raised. */
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button.selected {
+  transform: translateY(3px) !important;
+  filter: brightness(.82) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,45,.40),
+    inset 0 -1px 1px rgba(255,255,255,.10),
+    0 1px 0 rgba(26,34,112,.72),
+    0 2px 5px rgba(0,0,0,.20) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button:not(.selected) {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+
+/* Sound/vibration: enabled = raised, disabled = pressed and darker. */
+html[data-theme-mode="dark"] #screen-settings .setting-toggle:not(.off) {
+  transform: translateY(0) !important;
+  filter: none !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings .setting-toggle.off {
+  transform: translateY(3px) !important;
+  filter: brightness(.72) !important;
+  color: rgba(255,255,255,.78) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,45,.44),
+    inset 0 -1px 1px rgba(255,255,255,.08),
+    0 1px 0 rgba(26,34,112,.68),
+    0 2px 5px rgba(0,0,0,.18) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings .settings-back-button:active,
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button:active,
+html[data-theme-mode="dark"] #screen-settings .setting-toggle:active,
+html[data-theme-mode="dark"] #screen-settings .settings-link:active {
+  transform: translateY(3px) !important;
+  filter: brightness(.82) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,45,.40),
+    inset 0 -1px 1px rgba(255,255,255,.10),
+    0 1px 0 rgba(26,34,112,.72) !important;
+}
+
+/* v40: stage base colour follows the current light/dark theme button palette.
+   Existing progress-band colours remain authoritative once progress is > 0. */
+html[data-theme-mode="dark"] #stage-buttons .stage-button[data-progress-band="0"] {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #8A95FF !important;
+}
+
+html[data-theme-mode="light"] #stage-buttons .stage-button[data-progress-band="0"] {
+  background: linear-gradient(180deg, #F8F3E2 0%, #EBE8D9 58%, #D9D1B6 100%) !important;
+  color: #4A432E !important;
+  border-color: #CDBB8A !important;
+}
+
+/* Keep all calculated stage-progress colours exactly as the existing logic defines them. */
+#stage-buttons .stage-button[data-progress-band="1-25"] {
+  background: linear-gradient(180deg, #efb7bb, #dc969c) !important;
+  color: #3c2024 !important;
+}
+#stage-buttons .stage-button[data-progress-band="26-50"] {
+  background: linear-gradient(180deg, #f0dfa9, #dcc87f) !important;
+  color: #3d351b !important;
+}
+#stage-buttons .stage-button[data-progress-band="51-75"] {
+  background: linear-gradient(180deg, #b8dfbd, #94c79c) !important;
+  color: #203724 !important;
+}
+#stage-buttons .stage-button[data-progress-band="76-99"] {
+  background: linear-gradient(180deg, #bbd9ef, #95c0df) !important;
+  color: #1f3343 !important;
+}
+#stage-buttons .stage-button[data-progress-band="100"] {
+  background: linear-gradient(180deg, #6da4f0, #4c82d4) !important;
+  color: #ffffff !important;
+}
+
+/* The Light theme selector always represents the beige/light palette, even
+   while the settings page itself is currently in dark mode. */
+#screen-settings .theme-mode-button[data-theme-mode="light"],
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button[data-theme-mode="light"],
+html[data-theme-mode="light"] #screen-settings .theme-mode-button[data-theme-mode="light"] {
+  background: linear-gradient(180deg, #F8F3E2 0%, #EBE8D9 58%, #D9D1B6 100%) !important;
+  color: #4A432E !important;
+  border-color: #CDBB8A !important;
+  filter: none;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.72),
+    inset 0 -2px 2px rgba(95,78,34,.14),
+    0 5px 0 #B7A77A,
+    0 9px 14px rgba(83,67,27,.22) !important;
+}
+
+#screen-settings .theme-mode-button[data-theme-mode="light"].selected,
+html[data-theme-mode="dark"] #screen-settings .theme-mode-button[data-theme-mode="light"].selected,
+html[data-theme-mode="light"] #screen-settings .theme-mode-button[data-theme-mode="light"].selected,
+#screen-settings .theme-mode-button[data-theme-mode="light"]:active {
+  background: linear-gradient(180deg, #E7E0C8 0%, #D9D1B6 100%) !important;
+  color: #4A432E !important;
+  transform: translateY(3px) !important;
+  filter: brightness(.94) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(83,67,27,.24),
+    inset 0 -1px 1px rgba(255,255,255,.34),
+    0 1px 0 #B7A77A,
+    0 2px 5px rgba(83,67,27,.16) !important;
+}
+
+
+/* v41: help modal uses the project C00 artwork at UI scale, not source size. */
+#help-modal .help-cat-head {
+  display: block;
+  width: clamp(54px, 15vw, 72px);
+  height: auto;
+  margin: 0 auto 8px;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 3px color-mix(in srgb, var(--theme-shadow) 42%, transparent));
+}
+
+/* Help close follows the app's current raised/pressed button language. */
+#btn-help-close {
+  position: relative;
+  min-width: 112px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 58%, var(--theme-outline)) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--theme-accent) 82%, white 18%) 0%,
+    var(--theme-accent) 58%,
+    var(--theme-accent-strong) 100%) !important;
+  color: var(--theme-on-accent) !important;
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 24%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 14%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-accent-strong) 72%, var(--theme-shadow)),
+    0 8px 12px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+}
+
+#btn-help-close:active {
+  transform: translateY(2px);
+  filter: brightness(.90);
+  box-shadow:
+    inset 0 3px 5px color-mix(in srgb, black 22%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-accent-strong) 62%, var(--theme-shadow)),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 18%, transparent) !important;
+}
+
+/* v42: marker icon selector follows the theme-mode depth language.
+   Selected/active = pressed down; unselected = raised. */
+#screen-reminder-icons .reminder-icon-card {
+  transform: translateY(0);
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, background 140ms ease, border-color 140ms ease;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 22%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 13%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-shadow) 70%, transparent),
+    0 9px 14px color-mix(in srgb, var(--theme-shadow) 30%, transparent) !important;
+}
+
+#screen-reminder-icons .reminder-icon-card.selected {
+  transform: translateY(3px);
+  filter: brightness(.92);
+  border-color: color-mix(in srgb, var(--theme-accent) 72%, var(--theme-outline));
+  box-shadow:
+    inset 0 3px 5px color-mix(in srgb, black 22%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 48%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 16%, transparent) !important;
+}
+
+#screen-reminder-icons .reminder-icon-card:not(.selected):active {
+  transform: translateY(3px);
+  filter: brightness(.92);
+  box-shadow:
+    inset 0 3px 5px color-mix(in srgb, black 22%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 48%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 16%, transparent) !important;
+}
+
+#screen-reminder-icons .reminder-icon-card.selected:active {
+  transform: translateY(3px);
+}
+
+html[data-theme-mode="dark"] #screen-reminder-icons .reminder-icon-card:not(.selected) {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #8A95FF !important;
+  filter: none;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.24),
+    inset 0 -2px 2px rgba(0,0,50,.22),
+    0 5px 0 #2F3ABB,
+    0 9px 15px rgba(0,0,0,.30) !important;
+}
+
+html[data-theme-mode="dark"] #screen-reminder-icons .reminder-icon-card.selected,
+html[data-theme-mode="dark"] #screen-reminder-icons .reminder-icon-card:not(.selected):active {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #8A95FF !important;
+  filter: brightness(.82) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,45,.40),
+    inset 0 -1px 1px rgba(255,255,255,.10),
+    0 1px 0 rgba(26,34,112,.72),
+    0 2px 5px rgba(0,0,0,.20) !important;
+}
+
+html[data-theme-mode="dark"] #screen-reminder-icons .reminder-icon-meta small {
+  color: rgba(255,255,255,.82);
+}
+
+html[data-theme-mode="light"] #screen-reminder-icons .reminder-icon-card:not(.selected) {
+  background: linear-gradient(180deg, #F8F3E2 0%, #EBE8D9 58%, #D9D1B6 100%) !important;
+  color: #4A432E !important;
+  border-color: #CDBB8A !important;
+  filter: none;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.72),
+    inset 0 -2px 2px rgba(95,78,34,.14),
+    0 5px 0 #B7A77A,
+    0 9px 14px rgba(83,67,27,.22) !important;
+}
+
+html[data-theme-mode="light"] #screen-reminder-icons .reminder-icon-card.selected,
+html[data-theme-mode="light"] #screen-reminder-icons .reminder-icon-card:not(.selected):active {
+  background: linear-gradient(180deg, #E7E0C8 0%, #D9D1B6 100%) !important;
+  color: #4A432E !important;
+  border-color: #CDBB8A !important;
+  filter: brightness(.94) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(83,67,27,.24),
+    inset 0 -1px 1px rgba(255,255,255,.34),
+    0 1px 0 #B7A77A,
+    0 2px 5px rgba(83,67,27,.16) !important;
+}
+
+
+/* v43: Block-colour one-shot actions use raised 3D buttons.
+   These are momentary actions only, so there is no persistent selected/recessed state. */
+#btn-reset-block-colors,
+#btn-block-color-editor-close {
+  transform: translateY(0);
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 78%, transparent) !important;
+  box-shadow:
+    inset 0 2px 2px color-mix(in srgb, white 24%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 14%, transparent),
+    0 5px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 9px 14px color-mix(in srgb, var(--theme-shadow) 30%, transparent) !important;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+  touch-action: manipulation;
+}
+
+#btn-reset-block-colors:active,
+#btn-block-color-editor-close:active {
+  transform: translateY(4px);
+  filter: brightness(.92);
+  box-shadow:
+    inset 0 3px 5px color-mix(in srgb, black 22%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 48%, transparent),
+    0 2px 5px color-mix(in srgb, var(--theme-shadow) 16%, transparent) !important;
+}
+
+
+/* v45: hard-level selector reuses the fixed selector without a board-size block. */
+#screen-select.hard-level-select .three-block-select {
+  gap: 10px;
+}
+
+#screen-select.hard-level-select .stage-selection-block {
+  margin-top: 2px;
+}
+
+#screen-select.hard-level-select .level-selection-block {
+  max-height: calc(100dvh - 300px - var(--cat-safe-height) - env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 400px) {
+  #screen-select.hard-level-select .level-selection-block {
+    max-height: calc(100dvh - 278px - var(--cat-safe-height) - env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* v46: make failed hard-level asset loads visible instead of appearing unresponsive. */
+.level-button.load-error {
+  filter: brightness(.9);
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+
+/* Game bottom actions: keep the button row 4px above the first visible pixel
+   of background_cat.png. The body::after box is taller than the contained PNG,
+   so using the pseudo-element aspect-ratio here leaves a large false gap. */
+.game-bottom-actions {
+  position: fixed;
+  left: 50%;
+  bottom: calc(min(38.56vw, 253.7px) + 4px);
+  z-index: 12;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: min(calc(100vw - 32px), 528px);
+  transform: translateX(-50%);
+}
+
+.game-bottom-action {
+  flex: 0 1 64px;
+  min-width: 44px;
+  min-height: 64px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #70451f;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffeab9, #d9a75e);
+  box-shadow: 0 3px 0 #8d5d2f;
+  cursor: pointer;
+  transition: transform 80ms ease-out;
+  touch-action: manipulation;
+}
+
+.game-bottom-action img {
+  display: block;
+  width: 100%;
+  height: 64px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.game-bottom-action:not(:disabled):active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #8d5d2f;
+}
+
+.game-bottom-action:disabled {
+  filter: grayscale(1);
+  opacity: .62;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-bottom-action {
+    transition: none;
+  }
+}
+
+.modal-message {
+  margin: 12px 0 16px;
+  color: var(--theme-text-secondary);
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* 道具按鈕／名稱／數量／簡短說明／說明按鈕維持單排。 */
+.backpack-box {
+  width: min(560px, calc(100vw - 24px));
+  min-width: 0;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 24px 12px;
+}
+.backpack-item {
+  display: grid;
+  grid-template-columns: 44px max-content max-content minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: clamp(2px, 1vw, 6px);
+  margin: 16px 0;
+  text-align: left;
+}
+.item-icon-button { min-height: 44px; }
+.item-icon-button img { height: 42px; }
+.item-name, .item-count, .item-description { white-space: nowrap; }
+.item-name { font-size: 1.35rem; }
+.item-count { font-size: 1.125rem; }
+.item-description {
+  font-size: clamp(15px, 3.9vw, 21px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#backpack-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 2.4rem;
+}
+#backpack-title.item-manual-title { font-size: 1.6rem; }
+#item-manual-icon { width: 56px; height: 56px; object-fit: contain; }
+#backpack-list .modal-buttons button { font-size: 1.5rem; }
+.item-manual-content {
+  margin-bottom: 20px;
+  text-align: left;
+  font-size: .9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: min(55dvh, 420px);
+  overflow-y: auto;
+}
+.detector-select-hint {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  white-space: nowrap;
+  font-size: .85rem;
+}
+#detector-confirm-modal {
+  position: static;
+  inset: auto;
+  background: transparent;
+  margin-top: 12px;
+  padding: 0;
+}
+.detector-confirm-box { width: 100%; min-width: 0; padding: 12px 16px; }
+.detector-confirm-box .modal-title { font-size: 1.1rem; margin-bottom: 12px; }
+.detector-preview {
+  position: absolute;
+  z-index: 8;
+  border: 3px solid #fff;
+  border-radius: 6px;
+  outline: 3px solid #00e5ff;
+  background: rgba(184, 134, 11, .18);
+  box-shadow: 0 0 0 4px rgba(0, 25, 40, .8), 0 0 10px rgba(0, 229, 255, .9);
+  pointer-events: none;
+  animation: detector-breathe .7s ease-in-out infinite;
+}
+/* 中心四角準星只畫在覆蓋層，不移動方塊或增加動畫。 */
+.detector-preview[data-center="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background:
+    linear-gradient(#fff, #fff) left top / 35% 3px no-repeat,
+    linear-gradient(#fff, #fff) left top / 3px 35% no-repeat,
+    linear-gradient(#fff, #fff) right top / 35% 3px no-repeat,
+    linear-gradient(#fff, #fff) right top / 3px 35% no-repeat,
+    linear-gradient(#fff, #fff) left bottom / 35% 3px no-repeat,
+    linear-gradient(#fff, #fff) left bottom / 3px 35% no-repeat,
+    linear-gradient(#fff, #fff) right bottom / 35% 3px no-repeat,
+    linear-gradient(#fff, #fff) right bottom / 3px 35% no-repeat;
+  pointer-events: none;
+}
+@keyframes detector-breathe {
+  0%, 100% { opacity: .7; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .detector-preview { animation: none; }
+}
+
+/* ── Random level share code ─────────────────────────────────────────────── */
+.share-code-box {
+  width: min(calc(100vw - 40px), 420px);
+}
+
+.share-code-import-box {
+  width: min(calc(100vw - 24px), 560px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+.share-code-import-box::-webkit-scrollbar {
+  width: 9px;
+}
+
+.share-code-import-box::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-shadow) 18%, transparent);
+}
+
+.share-code-import-box::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--theme-accent);
+  background-clip: padding-box;
+}
+
+.share-code-label,
+.share-code-input-label {
+  display: block;
+  margin: 8px 0 6px;
+  color: var(--theme-text-secondary);
+  font-size: .9rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.share-code-value {
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 12px 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 60%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--theme-bg) 82%, transparent);
+  color: var(--theme-text);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.share-code-current-actions {
+  margin-bottom: 18px;
+}
+
+.share-code-input {
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 72%, transparent);
+  border-radius: 9px;
+  outline: none;
+  background: var(--theme-surface, rgba(255, 255, 255, .92));
+  color: var(--theme-text);
+  font: 700 1rem ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  text-transform: uppercase;
+}
+
+.share-code-input:focus {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent) 24%, transparent);
+}
+
+.share-code-name-input {
+  font-family: inherit;
+  text-transform: none;
+}
+
+.share-code-saved-section {
+  margin: 8px 0 14px;
+}
+
+.saved-share-code-list {
+  display: grid;
+  gap: 8px;
+}
+
+.saved-share-code-item {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 72%, transparent);
+  border-radius: 9px;
+  background: var(--theme-surface-2);
+  color: var(--theme-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.saved-share-code-item small {
+  color: var(--theme-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+}
+
+.saved-share-code-item.selected {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent) 28%, transparent);
+}
+
+.saved-share-code-empty {
+  padding: 10px;
+  color: var(--theme-text-secondary);
+  font-size: .86rem;
+  text-align: center;
+}
+
+.modal-buttons.share-code-import-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.share-code-import-actions button {
+  width: 100%;
+  padding-inline: 10px;
+}
+
+.share-code-import-actions button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+#btn-delete-share-code:not(:disabled) {
+  color: #d94b4b;
+}
+
+@media (max-width: 400px) {
+  .share-code-import-box {
+    width: calc(100vw - 12px);
+    max-height: calc(100dvh - 20px);
+    padding: 28px 18px 24px;
+  }
+}
+
+.share-code-status {
+  min-height: 22px;
+  margin: 2px 0 12px;
+  color: var(--theme-text-secondary);
+  font-size: .88rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.share-code-status[data-kind="error"] {
+  color: #d94b4b;
+}
+
+.share-code-status[data-kind="success"] {
+  color: var(--theme-accent-strong, var(--theme-accent));
+}
+
+/* ── v47: random share-code layout and game button palette ─────────────── */
+/* Keep bottom actions in document flow so they can never cover board cells. */
+.game-bottom-actions {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: auto;
+  width: 100% !important;
+  margin: 14px 0 0;
+  transform: none !important;
+}
+
+/* Start screen reuses the title page artwork and replaces its menu with one cue. */
+#screen-entry {
+  min-height: calc(100dvh - 180px - env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-start-button {
+  width: 75%;
+  min-height: 64px;
+  border: 0;
+  background: transparent;
+  color: var(--entry-start-color);
+  font-size: clamp(2rem, 9vw, 3.5rem);
+  letter-spacing: .15em;
+  cursor: pointer;
+  touch-action: manipulation;
+  animation: entry-start-breathe 1.8s ease-in-out infinite;
+}
+
+html[data-theme-mode="dark"] .entry-start-button {
+  --entry-start-color: #B9853D;
+  --entry-start-glow: #D6A45E;
+}
+
+html[data-theme-mode="light"] .entry-start-button {
+  --entry-start-color: #8A6A32;
+  --entry-start-glow: #D8C58D;
+}
+
+.entry-start-button:active {
+  transform: scale(.94);
+}
+
+@keyframes entry-start-breathe {
+  0%, 100% {
+    opacity: .42;
+    transform: scale(.96);
+    text-shadow: 0 0 8px color-mix(in srgb, var(--entry-start-glow) 45%, transparent);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+    text-shadow: 0 0 26px color-mix(in srgb, var(--entry-start-glow) 88%, transparent);
+  }
+}
+
+@media (max-width: 400px) {
+  #screen-entry {
+    min-height: calc(100dvh - 165px - env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-start-button {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* The import entry is always the final tile on the random-level selection page. */
+.random-size-grid .share-code-import-button {
+  order: 9999;
+}
+
+/* In-game text controls use the same raised surface as the home menu. */
+#screen-game .game-toolbar.tool-row button {
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 78%, transparent) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--theme-surface) 88%, white 12%) 0%,
+    var(--theme-surface) 55%,
+    color-mix(in srgb, var(--theme-surface) 88%, black 12%) 100%) !important;
+  color: var(--theme-text) !important;
+  box-shadow:
+    inset 0 2px 2px color-mix(in srgb, white 26%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 14%, transparent),
+    0 6px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 10px 18px color-mix(in srgb, var(--theme-shadow) 36%, transparent) !important;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+}
+
+#screen-game .game-toolbar.tool-row button:active {
+  transform: translateY(5px);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 16%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 16%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 52%, transparent) !important;
+}
+
+html[data-theme-mode="dark"] #screen-game .game-toolbar.tool-row button {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #8A95FF !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255, 255, 255, 0.24),
+    inset 0 -2px 2px rgba(0, 0, 50, 0.22),
+    0 6px 0 #2F3ABB,
+    0 10px 18px rgba(0, 0, 0, 0.34) !important;
+}
+
+html[data-theme-mode="dark"] #screen-game .game-toolbar.tool-row button:active {
+  background: linear-gradient(180deg, #4654E8 0%, #3542D5 100%) !important;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 45, 0.26),
+    0 1px 0 #202AA8 !important;
+}
+
+/* Toggle state still uses depth, but no longer falls back to the old near-black colour. */
+#screen-game .game-toolbar.tool-row button.tool-toggle.off,
+html[data-theme-mode="dark"] #screen-game .game-toolbar.tool-row button.tool-toggle.off {
+  color: inherit !important;
+  filter: brightness(.82);
+  transform: translateY(3px);
+}
+
+/* Share modal is copy-only; import lives on random-select. */
+#share-code-modal .share-code-label {
+  text-align: center;
+}
+
+#share-code-modal .share-code-value {
+  text-align: center;
+}
+
+/* v47: unified level-selection tiles and focused stage progress. */
+/* Stage progress is now shown as numbers + a progress bar, never by recolouring tiles. */
+#stage-buttons .stage-button,
+#stage-buttons .stage-button[data-progress-band="0"],
+#stage-buttons .stage-button[data-progress-band="1-25"],
+#stage-buttons .stage-button[data-progress-band="26-50"],
+#stage-buttons .stage-button[data-progress-band="51-75"],
+#stage-buttons .stage-button[data-progress-band="76-99"],
+#stage-buttons .stage-button[data-progress-band="100"],
+#stage-buttons .stage-button[data-stars="1"],
+#stage-buttons .stage-button[data-stars="2"],
+#stage-buttons .stage-button[data-stars="3"] {
+  background: var(--select-button-bg, #303134) !important;
+  color: var(--select-button-text, #e8eaed) !important;
+}
+
+html[data-theme-mode="dark"] #stage-buttons .stage-button,
+html[data-theme-mode="dark"] #stage-buttons .stage-button[data-progress-band] {
+  background: linear-gradient(180deg, #7A87FF 0%, #5667F0 56%, #4252D4 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #8A95FF !important;
+}
+
+html[data-theme-mode="light"] #stage-buttons .stage-button,
+html[data-theme-mode="light"] #stage-buttons .stage-button[data-progress-band] {
+  background: linear-gradient(180deg, #E6DDBF 0%, #D8CCA7 58%, #C3B487 100%) !important;
+  color: #3F351E !important;
+  border-color: #A89158 !important;
+}
+
+/* Selection is communicated only by depth, not by a new colour. */
+#stage-buttons .stage-button.selected {
+  filter: none !important;
+}
+
+/* Once a stage is opened, only that stage tile remains visible. Clicking it
+   again uses the existing selectStage toggle and restores the full stage list. */
+#stage-buttons.stage-focused .stage-button:not(.selected) {
+  display: none !important;
+}
+
+/* Focused stage: the selected button and progress summary share one row so
+   the level grid can move upward instead of spending a full row on progress. */
+#stage-buttons.stage-focused {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+}
+
+#stage-buttons.stage-focused .stage-button.selected {
+  grid-column: 1;
+}
+
+.stage-progress-summary {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(70px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 72%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--theme-surface) 92%, transparent);
+  color: var(--theme-text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
+  font-size: .78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-progress-summary.hidden {
+  display: none !important;
+}
+
+.stage-star-total {
+  color: #ffd75a;
+  text-shadow: 0 1px 1px color-mix(in srgb, black 30%, transparent);
+  white-space: nowrap;
+}
+
+.paw-icons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  vertical-align: -.12em;
+}
+
+.paw-icons img {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+}
+
+.stage-clear-total {
+  color: var(--theme-text-secondary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stage-progress-track {
+  height: 10px;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-shadow) 24%, var(--theme-surface));
+  box-shadow: inset 0 1px 3px color-mix(in srgb, black 25%, transparent);
+}
+
+@media (max-width: 390px) {
+  .stage-progress-summary {
+    gap: 6px;
+    padding-inline: 7px;
+    font-size: .7rem;
+  }
+
+  .stage-clear-total {
+    font-size: .66rem;
+  }
+}
+
+.stage-progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--theme-accent);
+  transition: width 180ms ease-out;
+}
+
+/* Level completion no longer recolours the tile. The existing star pseudo
+   element and saved-progress heart remain visible in the lower-right badge area. */
+#level-buttons button,
+#level-buttons button.done,
+#level-buttons button[data-stars="1"],
+#level-buttons button[data-stars="2"],
+#level-buttons button[data-stars="3"] {
+  background: var(--select-button-bg, #303134) !important;
+  color: var(--select-button-text, #e8eaed) !important;
+}
+
+/* Number-only board-size labels need no extra width; keep the current 3D rules. */
+#size-buttons .size-button {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Gameplay record reset entry. Uses the normal settings palette so it remains
+   consistent with the rest of the settings page rather than looking like a
+   destructive system dialog until the confirmation step. */
+#btn-delete-game-records {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 12px 14px;
+}
+
+#btn-delete-game-records > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#btn-delete-game-records strong {
+  color: var(--theme-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+#btn-delete-game-records small {
+  color: var(--theme-text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+
+/* v49: random-level score system. */
+#screen-game .game-nav-row {
+  position: relative;
+}
+
+.random-score-display {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: calc(100% - 116px);
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  color: var(--theme-text);
+  font-size: 1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.random-score-display.hidden {
+  display: none !important;
+}
+
+html[data-theme-mode="dark"] .random-score-display {
+  color: #FFFFFF;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .34);
+}
+
+.random-size-button .random-high-score {
+  color: var(--theme-text-secondary);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* MeowDoku 2.0 map navigation. */
+body[data-app-screen="world-map"],
+body[data-app-screen="small-map"] {
+  overflow: hidden;
+  padding-top: 0;
+}
+
+body[data-app-screen="world-map"]::before,
+body[data-app-screen="world-map"]::after,
+body[data-app-screen="small-map"]::before,
+body[data-app-screen="small-map"]::after,
+body[data-app-screen="world-map"] > .app-header,
+body[data-app-screen="small-map"] > .app-header {
+  display: none;
+}
+
+body[data-app-screen="world-map"] #app,
+body[data-app-screen="small-map"] #app {
+  width: 100%;
+  max-width: 560px;
+  height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.map-screen {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, 560px);
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #0d2030;
+}
+
+.map-toolbar {
+  position: absolute;
+  z-index: 30;
+  top: max(8px, env(safe-area-inset-top, 0px));
+  left: 10px;
+  right: 10px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.map-toolbar h2 {
+  margin: 0;
+  padding: 8px 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 18px;
+  background: rgba(8, 20, 34, .72);
+  color: #fff;
+  font-size: clamp(.9rem, 4.2vw, 1.15rem);
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, .8);
+  white-space: nowrap;
+  backdrop-filter: blur(5px);
+}
+
+.map-toolbar-button {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 0 !important;
+  padding: 2px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+  border-radius: 15px !important;
+  background: var(--theme-surface) !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .32) !important;
+  pointer-events: auto;
+}
+
+.map-toolbar-button .theme-nav-icon {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.world-map-pager {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.world-map-pager::-webkit-scrollbar {
+  display: none;
+}
+
+.world-map-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  background: #173b51;
+}
+
+.world-map-background,
+.small-map-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.world-entry-button {
+  position: absolute;
+  z-index: 5;
+  left: var(--entry-x);
+  top: var(--entry-y);
+  width: min(47.25%, 236px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .44));
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.world-entry-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.world-entry-button:active {
+  transform: translate(-50%, calc(-50% + 3px)) scale(.97);
+}
+
+.world-entry-button.locked {
+  filter: grayscale(.86) brightness(.66) drop-shadow(0 4px 4px rgba(0, 0, 0, .44));
+}
+
+.world-entry-button.locked::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 38px;
+  aspect-ratio: 65 / 86;
+  transform: translate(-50%, -50%);
+  background: url("images/UI/ui_icon_lock.png") center / contain no-repeat;
+}
+
+.world-map-indicator {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  gap: 8px;
+  transform: translateY(-50%);
+}
+
+.world-map-dot {
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgba(255, 255, 255, .9);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .34);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+}
+
+.world-map-dot.active {
+  background: #fff2a8;
+  transform: scale(1.35);
+}
+
+.difficulty-picker {
+  position: absolute;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 72px 16px 20px;
+  background: rgba(3, 9, 17, .72);
+  backdrop-filter: blur(4px);
+}
+
+.difficulty-picker-panel {
+  position: relative;
+  width: min(100%, 460px);
+  padding: 18px 12px 14px;
+  border: 2px solid rgba(255, 244, 193, .85);
+  border-radius: 22px;
+  background: rgba(252, 239, 204, .96);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+}
+
+.difficulty-picker-panel h2 {
+  margin: 0 42px 12px;
+  color: #19253a;
+  text-align: center;
+}
+
+.difficulty-close {
+  position: absolute;
+  z-index: 2;
+  top: 7px;
+  right: 9px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #26354b;
+  color: white;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.difficulty-options {
+  display: grid;
+  gap: 10px;
+}
+
+.difficulty-option {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.difficulty-option img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.difficulty-option-progress,
+.small-map-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: clamp(.68rem, 3vw, .82rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.difficulty-option-progress {
+  min-height: 30px;
+  padding: 5px 8px;
+  background: #26354b;
+  color: #fff3d0;
+}
+
+.difficulty-option-progress .v2-saved-total,
+.small-map-progress .v2-saved-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.difficulty-option-progress img,
+.small-map-progress img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.small-map-progress {
+  position: absolute;
+  z-index: 2;
+  top: 30px;
+  left: 62px;
+  right: 62px;
+  min-height: 0;
+  padding: 0;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #fff3d0;
+  font-size: clamp(.52rem, 2.25vw, .66rem);
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+
+#screen-small-map .map-toolbar h2 {
+  padding: 4px 10px 18px;
+  line-height: 1;
+}
+
+.small-map-progress img {
+  width: 14px;
+  height: 14px;
+}
+
+.difficulty-option.locked {
+  filter: grayscale(.8) brightness(.62);
+}
+
+.difficulty-option.locked::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 34px;
+  aspect-ratio: 65 / 86;
+  transform: translate(-50%, -50%);
+  background: url("images/UI/ui_icon_lock.png") center / contain no-repeat;
+}
+
+.small-map-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #13263c;
+}
+
+.small-map-spots,
+.small-map-stages {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.map-spot-button,
+.map-stage-button,
+.wormhole-size-button {
+  position: absolute;
+  left: var(--map-x);
+  top: var(--map-y);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .5));
+}
+
+.map-spot-button {
+  width: clamp(52px, 16vw, 78px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.map-spot-button img,
+.map-stage-button img,
+.wormhole-size-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.map-spot-progress {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 86%;
+  min-width: 27px;
+  padding: 1px 3px 1px 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(8, 20, 34, .82);
+  color: white;
+  font-size: .62rem;
+  line-height: 1;
+  text-shadow: 0 1px 1px #000;
+  pointer-events: none;
+}
+
+.map-spot-progress img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.map-spot-button.dimmed {
+  opacity: .34;
+  transform: translate(-50%, -50%) scale(.88);
+}
+
+.map-spot-button.selected {
+  z-index: 8;
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.map-stage-button {
+  z-index: 7;
+  width: clamp(42px, 12vw, 58px);
+  animation: map-node-in 150ms ease-out both;
+  animation-delay: calc(var(--stage-order) * 18ms);
+}
+
+.map-stage-button .map-stage-current {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 88%;
+  width: 55%;
+  transform: translateY(-50%);
+}
+
+.map-stage-button:active,
+.map-spot-button:active,
+.wormhole-size-button:active {
+  transform: translate(-50%, calc(-50% + 2px)) scale(.95);
+}
+
+.small-map-status {
+  position: absolute;
+  z-index: 25;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  width: min(calc(100% - 28px), 440px);
+  padding: 9px 12px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, .68);
+  border-radius: 14px;
+  background: rgba(7, 18, 30, .82);
+  color: white;
+  font-size: .82rem;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+}
+
+.wormhole-size-button {
+  width: min(48%, 237px);
+}
+
+.wormhole-share-button {
+  position: absolute;
+  z-index: 12;
+  top: var(--map-y);
+  left: var(--map-x);
+  width: min(48%, 237px);
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: transparent;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .5));
+}
+
+.wormhole-share-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.wormhole-share-button:active {
+  transform: translate(-50%, calc(-50% + 2px)) scale(.95);
+}
+
+@keyframes map-node-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.72); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (max-width: 390px) {
+  .world-entry-button { width: min(49.875%, 236px); }
+  .map-toolbar { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+  .map-toolbar-button { width: 44px !important; height: 44px !important; }
+  .map-toolbar-button .theme-nav-icon { width: 39px !important; height: 39px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-map-pager { scroll-behavior: auto; }
+  .world-entry-button,
+  .map-spot-button,
+  .map-stage-button { transition: none; animation: none; }
+}
+
+html[data-theme-mode="dark"] .random-size-button .random-high-score {
+  color: rgba(255, 255, 255, .86);
+}
+
+@media (max-width: 390px) {
+  .random-score-display {
+    max-width: calc(100% - 104px);
+    font-size: .88rem;
+  }
+
+  .random-size-button .random-high-score {
+    font-size: .68rem;
+  }
+}
+
+/* v50: two-page settings layout. */
+:root {
+  --next-icon-image: url("images/UI/next-dark.png");
+}
+
+html[data-theme-mode="dark"] {
+  --next-icon-image: url("images/UI/next-dark.png");
+}
+
+html[data-theme-mode="light"] {
+  --next-icon-image: url("images/UI/next-dark.png");
+}
+
+.theme-next-icon {
+  background-image: var(--next-icon-image);
+}
+
+#screen-settings .settings-header.has-next-button {
+  grid-template-columns: 60px minmax(0, 1fr) 60px !important;
+}
+
+#screen-settings .settings-header.has-next-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+#screen-settings .settings-next-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  width: 60px !important;
+  height: 60px !important;
+  padding: 2px !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+  border-radius: 16px !important;
+  background: var(--theme-surface) !important;
+  color: var(--theme-text);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 18%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, filter 90ms ease-out;
+}
+
+#screen-settings .settings-next-button .theme-nav-icon {
+  width: 54px !important;
+  height: 54px !important;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.30));
+}
+
+#screen-settings .settings-next-button:active {
+  transform: translateY(3px) !important;
+  background: var(--theme-surface-2) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 10%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings .settings-next-button {
+  background: linear-gradient(180deg,
+    var(--settings-button-top) 0%,
+    var(--settings-button-mid) 56%,
+    var(--settings-button-bottom) 100%) !important;
+  color: #FFFFFF !important;
+  border-color: var(--settings-button-border) !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.24),
+    inset 0 -2px 2px rgba(0,0,50,.22),
+    0 5px 0 var(--settings-button-lip),
+    0 9px 15px rgba(0,0,0,.30) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings .settings-next-button:active {
+  transform: translateY(3px) !important;
+  filter: brightness(.82) !important;
+  box-shadow:
+    inset 0 3px 5px rgba(0,0,45,.40),
+    inset 0 -1px 1px rgba(255,255,255,.10),
+    0 1px 0 rgba(26,34,112,.72) !important;
+}
+
+#screen-settings .settings-page.hidden {
+  display: none !important;
+}
+
+#screen-settings[data-settings-page="2"] .settings-next-button {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#screen-settings .settings-secondary-section {
+  margin-top: 0;
+}
+
+#settings-page-2 .settings-list {
+  margin-top: 4px;
+}
+
+@media (max-width: 400px) {
+  #screen-settings .settings-header.has-next-button {
+    grid-template-columns: 60px minmax(0, 1fr) 60px !important;
+  }
+
+  #screen-settings .settings-next-button {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  #screen-settings .settings-next-button .theme-nav-icon {
+    width: 54px !important;
+    height: 54px !important;
+  }
+}
+
+/* v52: Settings record-delete action uses the same raised 3D treatment as
+   the other one-shot actions on settings page 2. */
+#screen-settings #btn-delete-game-records {
+  background: var(--theme-surface) !important;
+  color: var(--theme-text) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent) !important;
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 18%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 6px 9px color-mix(in srgb, var(--theme-shadow) 28%, transparent) !important;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease, border-color 140ms ease;
+  touch-action: manipulation;
+}
+
+#screen-settings #btn-delete-game-records:active {
+  transform: translateY(3px);
+  background: var(--theme-surface-2) !important;
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings #btn-delete-game-records {
+  background: linear-gradient(180deg,
+    var(--settings-button-top, #7A87FF) 0%,
+    var(--settings-button-mid, #5667F0) 56%,
+    var(--settings-button-bottom, #4252D4) 100%) !important;
+  color: #FFFFFF !important;
+  border-color: var(--settings-button-border, #8A95FF) !important;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.24),
+    inset 0 -2px 2px rgba(0,0,50,.22),
+    0 5px 0 var(--settings-button-lip, #2F3ABB),
+    0 9px 15px rgba(0,0,0,.30) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings #btn-delete-game-records:active {
+  transform: translateY(3px);
+  filter: brightness(.88);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,50,.28),
+    inset 0 -1px 1px rgba(255,255,255,.12),
+    0 1px 0 var(--settings-button-lip, #2F3ABB) !important;
+}
+
+html[data-theme-mode="dark"] #screen-settings #btn-delete-game-records strong,
+html[data-theme-mode="dark"] #screen-settings #btn-delete-game-records small {
+  color: #FFFFFF !important;
+}
+
+/* v52: random-level selector shows every size tile without an inner scroll area. */
+#screen-random-select .random-selection-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+  scrollbar-gutter: auto !important;
+  padding-bottom: 20px;
+}
+
+/* v53: darker light-theme controls and per-stage game scenery. */
+html[data-theme-mode="light"] button {
+  --theme-surface: #DED4B8;
+  --theme-surface-2: #C8BA92;
+  --theme-surface-disabled: #D2C7AB;
+  --theme-outline: rgba(80, 65, 32, .30);
+}
+
+body[data-app-screen="game"] .board {
+  position: relative;
+  isolation: isolate;
+  background: none;
+}
+
+body[data-app-screen="game"] .board::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border-radius: calc(var(--board-radius, 12px) + 5px);
+  background: center / cover no-repeat var(--game-board-background-image);
+  pointer-events: none;
+}
+
+/* v54: compact gameplay header and simplified maps. */
+body[data-app-screen="game"] > .app-header {
+  display: none;
+}
+
+body[data-app-screen="game"] #app {
+  padding-top: 8px;
+}
+
+#screen-game .game-nav-row {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) 60px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+}
+
+#screen-game .game-nav-row #btn-settings {
+  margin-left: 0;
+}
+
+#screen-game .game-nav-center {
+  display: flex;
+  min-width: 0;
+  height: 60px;
+  padding: 4px 11px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 30px;
+  background: rgba(8, 20, 34, .72);
+  color: #fff;
+  text-shadow: 0 2px 3px rgba(0, 0, 0, .8);
+  backdrop-filter: blur(5px);
+}
+
+#screen-game .game-nav-center .game-meta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 0;
+  margin: 0;
+}
+
+#screen-game:not([data-game-mode="random"]) .game-nav-center .game-meta-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+}
+
+#screen-game[data-game-mode="random"] .game-nav-center .game-meta-row,
+#screen-game[data-game-mode="random"] .game-nav-center .random-score-display {
+  display: grid;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 50%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 0;
+  margin: 0;
+}
+
+#screen-game[data-game-mode="random"] .game-nav-center #game-title,
+#screen-game[data-game-mode="random"] .game-nav-center .hearts,
+#screen-game[data-game-mode="random"] .game-nav-center .random-score-display > span {
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#screen-game:not([data-game-mode="random"]) .game-nav-center #game-title,
+#screen-game:not([data-game-mode="random"]) .game-nav-center .hearts {
+  text-align: center;
+}
+
+#screen-game .game-nav-center #game-title {
+  color: #fff;
+  font-size: clamp(.9rem, 4.2vw, 1.15rem);
+  line-height: 1.05;
+}
+
+#screen-game .game-nav-center .hearts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: clamp(.9rem, 4.2vw, 1.1rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+#screen-game .game-nav-center .hearts img {
+  width: clamp(17px, 4.5vw, 22px);
+  height: clamp(17px, 4.5vw, 22px);
+  object-fit: contain;
+}
+
+body[data-app-screen="game"] #board {
+  width: 104%;
+  margin-left: -2%;
+}
+
+#screen-game .game-nav-center .random-score-display {
+  position: static;
+  max-width: 100%;
+  margin-top: 3px;
+  transform: none;
+  color: #fff;
+  font-size: .82rem;
+  line-height: 1;
+}
+
+/* ── v2 level book and illustrated home menu ─────────────────────────── */
+#screen-home .home-menu {
+  max-height: calc(100dvh - 180px - env(safe-area-inset-bottom, 0px));
+  padding: 8px 0 18px;
+  gap: clamp(5px, 1.4vh, 12px) !important;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+#screen-home .home-menu::-webkit-scrollbar {
+  display: none;
+}
+
+#screen-home .home-menu-button {
+  width: min(61.5%, 375px);
+  min-height: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 4px 3px rgba(0, 0, 0, .42));
+}
+
+#screen-home .home-menu-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+#screen-home .home-menu-button:active {
+  transform: translateY(3px) scale(.97);
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body[data-app-screen="level-book"] > .app-header {
+  display: none;
+}
+
+body[data-app-screen="level-book"] #app {
+  width: 100%;
+  max-width: 560px;
+  height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.level-book-screen {
+  position: fixed;
+  inset: 0;
+  width: min(100vw, 560px);
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #ead09b url("images/bookmap/2map.png") center / 100% 100% no-repeat;
+  color: #24180f;
+}
+
+.level-book-toolbar h2 {
+  border-color: rgba(83, 49, 25, .62);
+  background: rgba(250, 226, 174, .9);
+  color: #24180f;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+  backdrop-filter: none;
+}
+
+.level-book-entry {
+  position: absolute;
+  inset: max(76px, calc(env(safe-area-inset-top, 0px) + 68px)) 22px max(18px, env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: minmax(0, 260px);
+  justify-content: center;
+  align-content: start;
+  gap: clamp(5px, 1vh, 9px);
+  padding: 8px 3px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.level-book-entry::-webkit-scrollbar {
+  display: none;
+}
+
+.level-book-entry-button,
+.level-book-difficulty {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  filter: drop-shadow(0 4px 3px rgba(66, 38, 17, .38));
+}
+
+.level-book-entry-button img,
+.level-book-difficulty img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.level-book-entry-button:active,
+.level-book-difficulty:not(:disabled):active {
+  transform: translateY(3px) scale(.97);
+}
+
+.level-book-entry-button.locked,
+.level-book-difficulty.locked {
+  filter: grayscale(.86) brightness(.62) drop-shadow(0 3px 2px rgba(66, 38, 17, .3));
+}
+
+.level-book-entry-button.locked::after,
+.level-book-difficulty.locked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  aspect-ratio: 65 / 86;
+  transform: translate(-50%, -50%);
+  background: url("images/UI/ui_icon_lock.png") center / contain no-repeat;
+}
+
+.level-book-levels {
+  position: absolute;
+  inset: max(76px, calc(env(safe-area-inset-top, 0px) + 68px)) 18px max(14px, env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+  gap: 7px;
+  min-height: 0;
+}
+
+.level-book-difficulties {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.level-book-difficulty {
+  width: 84%;
+  justify-self: center;
+}
+
+/* 書籤僅表示目前難度；絕對定位不改按鈕尺寸，動畫只移動書籤。 */
+.level-book-difficulty.selected:not(:disabled)::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: 6%;
+  z-index: 2;
+  width: clamp(18px, 5vw, 24px);
+  height: clamp(26px, 7vw, 34px);
+  background: linear-gradient(90deg, #752632 0 12%, #bc4654 12% 88%, #752632 88%);
+  border-top: 3px solid #f3d48e;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+  pointer-events: none;
+  animation: level-book-bookmark-float 1.8s ease-in-out infinite;
+}
+
+@keyframes level-book-bookmark-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-book-difficulty.selected:not(:disabled)::before {
+    animation: none;
+  }
+}
+
+.level-book-chapters {
+  display: grid;
+  width: 92%;
+  margin: 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.level-book-chapters.single {
+  grid-template-columns: 1fr;
+}
+
+.level-book-chapter {
+  min-height: 32px;
+  border: 1px solid #70451f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffeab9, #d9a75e);
+  color: #2d1b10;
+  font-size: .82rem;
+  font-weight: 900;
+  box-shadow: 0 2px 0 #8d5d2f;
+}
+
+.level-book-chapter.selected {
+  background: linear-gradient(180deg, #8d5d2f, #53331c);
+  color: #fff3d0;
+}
+
+.level-book-chapter:disabled {
+  filter: grayscale(1);
+  opacity: .42;
+}
+
+.level-book-progress {
+  width: 92%;
+  min-height: 72px;
+  margin: 0;
+  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  justify-self: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, .66);
+  border-radius: 10px;
+  background: rgba(48, 34, 25, .86);
+  color: #fff;
+  font-size: clamp(.68rem, 2.8vw, .82rem);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px #000;
+}
+
+.level-book-progress-ring {
+  position: relative;
+  width: 58px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(#f6c85f var(--level-book-progress), rgba(255, 255, 255, .2) 0);
+}
+
+.level-book-progress-ring::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: #473426;
+}
+
+.level-book-progress-ring strong {
+  position: relative;
+  z-index: 1;
+  color: #fff3d0;
+  font-size: .82rem;
+}
+
+.level-book-progress-stats {
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.level-book-progress-stats span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 4px;
+}
+
+.level-book-progress-stats span + span {
+  border-top: 1px solid rgba(255, 255, 255, .32);
+}
+
+.level-book-progress-stats b {
+  display: inline-flex;
+  align-items: center;
+  gap: .3em;
+  color: #fff3d0;
+}
+
+.level-book-progress-stats b img {
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.level-book-progress-stats strong {
+  white-space: nowrap;
+}
+
+.level-book-grid {
+  display: grid;
+  width: 95%;
+  justify-self: center;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  align-content: stretch;
+  gap: 5px;
+  min-height: 0;
+  touch-action: pan-y;
+}
+
+.level-book-level {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 2px 2px 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #7a4e27;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #fff1c8, #e7bc76);
+  color: #27170d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 2px 0 #9c6937;
+  text-align: center;
+}
+
+.level-book-level strong,
+.level-book-level span,
+.level-book-level small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.level-book-level strong {
+  font-size: clamp(.62rem, 2.55vw, .8rem);
+  line-height: 1.05;
+}
+
+.level-book-level span {
+  margin-top: 2px;
+  font-size: clamp(.84rem, 3.5vw, 1.05rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.level-book-level small {
+  margin-top: 1px;
+  font-size: clamp(.58rem, 2.25vw, .72rem);
+  line-height: 1;
+}
+
+.level-book-level small > .paw-icons {
+  display: inline-flex;
+  margin: 0;
+  gap: 0;
+  font-size: inherit;
+}
+
+.level-book-level.done {
+  background: linear-gradient(180deg, #fff7d8, #f0cc83);
+  border-color: #a86d18;
+}
+
+.level-book-level.locked {
+  filter: grayscale(.9);
+  opacity: .58;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 2px 0 #66584a;
+}
+
+.level-book-level.locked::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 13px;
+  aspect-ratio: 65 / 86;
+  background: url("images/UI/ui_icon_lock.png") center / contain no-repeat;
+}
+
+.level-book-saved {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: clamp(16px, 3vw, 20px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(42, 29, 18, .45));
+}
+
+.level-book-status {
+  min-height: 15px;
+  color: #a22323;
+  font-size: .72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.level-book-pager {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 10px;
+  color: #2d1b10;
+  font-size: 1rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.level-book-pager button {
+  height: 38px;
+  padding: 0;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+/* 上方導航與手冊換頁共用底座；保留各頁原圖、尺寸與位置。 */
+.level-book-pager button,
+html[data-theme-mode] #app :is(.settings-back-button, .page-settings-button, .map-toolbar-button,
+  .settings-next-button, .game-nav-row .icon-button) {
+  border: 1px solid #70451f !important;
+  border-radius: 12px !important;
+  background: linear-gradient(180deg, #ffeab9, #d9a75e) !important;
+  color: #2d1b10 !important;
+  box-shadow: 0 3px 0 #8d5d2f !important;
+  transition: transform 80ms ease-out !important;
+}
+
+.level-book-pager button:not(:disabled):active,
+html[data-theme-mode] #app :is(.settings-back-button, .page-settings-button, .map-toolbar-button,
+  .settings-next-button, .game-nav-row .icon-button):not(:disabled):active {
+  transform: translateY(2px) !important;
+  filter: none !important;
+  box-shadow: 0 1px 0 #8d5d2f !important;
+}
+
+.level-book-pager button:disabled {
+  filter: grayscale(1);
+  opacity: .42;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-book-pager button,
+  html[data-theme-mode] #app :is(.settings-back-button, .page-settings-button, .map-toolbar-button,
+    .settings-next-button, .game-nav-row .icon-button) {
+    transition: none !important;
+  }
+}
+
+@media (max-height: 720px) {
+  .level-book-entry,
+  .level-book-levels {
+    top: max(70px, calc(env(safe-area-inset-top, 0px) + 62px));
+  }
+
+  .level-book-levels {
+    gap: 4px;
+  }
+
+  .level-book-progress {
+    min-height: 62px;
+    padding-block: 4px;
+  }
+
+  .level-book-progress-ring {
+    width: 50px;
+  }
+
+  .level-book-level {
+    padding-block: 2px;
+  }
 }

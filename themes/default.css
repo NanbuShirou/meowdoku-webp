@@ -46,8 +46,6 @@
   --region-9: #15F505;   /* 螢光綠色 */
   --region-10: #FFDC00;  /* 金黃色 */
   --region-11: #780168;  /* 深洋紅色 */
-  --region-12: #220BB8;  /* 深藍紫色 */
-  --region-13: #004DFF;  /* 亮皇家藍色 */
 
   /* Crossed-out versions of the same fourteen regions.
      Each colour is derived from its matching region colour above. */
@@ -63,8 +61,6 @@
   --region-dim-9: color-mix(in srgb, var(--region-9) 52%, #303134);   /* 螢光綠色劃除態 */
   --region-dim-10: color-mix(in srgb, var(--region-10) 52%, #303134); /* 金黃色劃除態 */
   --region-dim-11: color-mix(in srgb, var(--region-11) 52%, #303134); /* 深洋紅色劃除態 */
-  --region-dim-12: color-mix(in srgb, var(--region-12) 52%, #303134); /* 深藍紫色劃除態 */
-  --region-dim-13: color-mix(in srgb, var(--region-13) 52%, #303134); /* 亮皇家藍色劃除態 */
 }
 
 /* A skin can also override full selectors, not only variables. */

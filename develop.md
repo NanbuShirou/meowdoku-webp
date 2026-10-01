@@ -8,7 +8,7 @@ units (`cqw`). This works because `.cell` has `container-type:
 inline-size` — `1cqw` inside it means "1% of that cell's width",
 regardless of board size (n) or screen size.
 
-All three knobs live at the top of `web/styles.css`, in `:root`:
+All three knobs live at the top of `styles.css`, in `:root`:
 
 ```css
 :root {
@@ -45,24 +45,18 @@ explicit numbers instead of "whatever the font happens to draw."
 
 ## Tuning region colors
 
-Region colors are CSS-driven. The current browser palette provides 14 distinct
-region styles (`data-region="0"` through `data-region="13"`).
+Region colors are CSS-driven. The current browser palette provides 12 distinct
+region styles (`data-region="0"` through `data-region="11"`).
 
-- Base region variables and dimmed mark colors live in `web/themes/default.css`.
-- Base cell selectors live in `web/styles.css`.
-- Glass / Pixel / Tile / Paper / Neon variants live in `web/themes/cell-styles.css`.
+- Base region variables and dimmed mark colors live in `themes/default.css`.
+- Base cell selectors live in `styles.css`.
+- Glass / Pixel / Tile / Paper / Neon variants live in `themes/cell-styles.css`.
 - `game.js` does not wrap region ids. If a board requests a region id beyond the
   available palette, the level is rejected instead of reusing an existing color.
-- Browser random levels are currently generated for N=6..14, so the palette must
-  contain at least 14 distinct entries before 13x13 / 14x14 are exposed in the UI.
-- Regions 10..13 deliberately use four categorical hues that are not reused by the tail palette:
-  yellow, magenta, vivid red, and royal blue. When tuning them, compare against regions 0..9
-  as a complete set instead of adjusting only the last four swatches.
+- The v2 UI exposes N=6..12, so the palette must contain 12 distinct entries.
+- Regions 10 and 11 use gold and deep magenta. When tuning them, compare against
+  regions 0..9 as a complete set.
 
 When adding a larger board later, add the new palette entries first, then raise the
 generator/display limits. Never restore modulo color wrapping because it can make
 two different regions appear to be the same region.
-
-## Generating levels
-
-See the "Generating levels" section in `README.md`.
