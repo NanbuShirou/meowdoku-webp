@@ -740,22 +740,10 @@ function startScreenLoading() {
   return token;
 }
 
-async function waitForImages(root) {
-  const images = [...root.querySelectorAll("img[src]")];
-  images.forEach((image) => { image.loading = "eager"; });
-  await Promise.all(images.map((image) => image.complete ? Promise.resolve() : new Promise((resolve) => {
-    image.addEventListener("load", resolve, { once: true });
-    image.addEventListener("error", resolve, { once: true });
-  })));
-  await Promise.all(images.map((image) => image.decode?.().catch(() => {}) || Promise.resolve()));
-}
-
-function finishScreenLoading(root, token) {
-  waitForImages(root).finally(() => {
-    if (token !== screenLoadToken) return;
-    el.loadingOverlay?.classList.add("hidden");
-    document.body.removeAttribute("aria-busy");
-  });
+function finishScreenLoading(_root, token) {
+  if (token !== screenLoadToken) return;
+  el.loadingOverlay?.classList.add("hidden");
+  document.body.removeAttribute("aria-busy");
 }
 
 // Per-cell DOM elements, indexed [row][col], created once per level load.
@@ -1432,9 +1420,7 @@ function renderWorldMap() {
     dot.textContent = String(pageIndex + 1);
     dot.setAttribute("aria-label", `切換到世界地圖 ${pageIndex + 1}`);
     dot.addEventListener("click", () => {
-      const loadingToken = startScreenLoading();
       selectWorldMapPage(pageIndex);
-      finishScreenLoading(el.screenWorldMap, loadingToken);
     });
     el.worldMapIndicator.appendChild(dot);
   });
@@ -1451,7 +1437,6 @@ function closeDifficultyPicker() {
 
 function showDifficultyPicker(size, pushHistory = true) {
   if (!V2_MAP_DATA || !Number.isInteger(size)) return;
-  const loadingToken = startScreenLoading();
   state.worldChoiceSize = size;
   if (el.difficultyPickerTitle) el.difficultyPickerTitle.textContent = `${size}×${size} 選擇難度`;
   if (el.difficultyOptions) {
@@ -1484,7 +1469,6 @@ function showDifficultyPicker(size, pushHistory = true) {
   }
   el.difficultyPicker?.classList.remove("hidden");
   if (pushHistory) history.pushState(v2HistoryState("world-map"), "");
-  finishScreenLoading(el.difficultyPicker, loadingToken);
 }
 
 function openV2SmallMap(size, difficulty) {
@@ -2663,7 +2647,7 @@ async function startHardLevel(idx, fromMap = false) {
   const boardSize = 6 + Math.floor((idx - 1) / 100);
   const localLevel = ((idx - 1) % 100) + 1;
   const path = `levels/hard/${boardSize}x${boardSize}/level_${boardSize}_${String(localLevel).padStart(8, "0")}.txt`;
-  const res = await fetch(path, { cache: "no-store" });
+  const res = await fetch(path);
   if (!res.ok) throw new Error(`高難關卡 ${idx} 讀取失敗：HTTP ${res.status}`);
 
   const text = await res.text();
@@ -2691,7 +2675,7 @@ async function startExtraLevel(size, difficulty, idx) {
   state.launchedFromMap = false;
   state.stageStart = null;
   const path = `levels/extra/${difficulty}/${size}x${size}/level_${size}_${String(idx).padStart(8, "0")}.txt`;
-  const res = await fetch(path, { cache: "no-store" });
+  const res = await fetch(path);
   if (!res.ok) throw new Error(`追加關卡讀取失敗：HTTP ${res.status}`);
   const { n, regions, solution } = parseLevel(await res.text());
   if (n !== size) throw new Error("追加關卡尺寸不符");
@@ -2918,7 +2902,6 @@ function hideAllAppScreens() {
 }
 
 function showAppScreen(screen, pushHistory = true) {
-  const loadingToken = startScreenLoading();
   closeBackpack();
   const target = APP_SCREEN_MAP[screen] ? screen : "home";
   if (["home", "level-modes", "world-map", "small-map", "level-book", "fixed-select", "random-select", "styles", "history", "history-random"].includes(target)) stopRandomTitleTimer();
@@ -2952,18 +2935,15 @@ function showAppScreen(screen, pushHistory = true) {
     if (history.state?.screen !== target) history.pushState(nextState, "");
     else history.replaceState(nextState, "");
   }
-  finishScreenLoading(APP_SCREEN_MAP[target](), loadingToken);
 }
 
 function showGameScreen() {
-  const loadingToken = startScreenLoading();
   hideAllAppScreens();
   document.body.dataset.appScreen = "game";
   el.screenGame.classList.remove("hidden");
   startGameplayTimer();
   if (history.state?.screen !== "game") history.pushState({ screen: "game" }, "");
   else history.replaceState({ screen: "game" }, "");
-  finishScreenLoading(el.screenGame, loadingToken);
 }
 
 function showSettingsScreen() {
