@@ -24,7 +24,7 @@ assert.match(sound, /new Audio\("raw\/meow\.wav"\)/);
 assert.match(game, /levels\/normal/);
 assert.match(game, /levels\/hard/);
 assert.match(game, /levels\/extra/);
-assert.match(html, /styles\.css\?v=2\.0\.2/);
+assert.match(html, /styles\.css\?v=2\.0\.3/);
 assert.match(html, /game\.js\?v=2\.0\.2/);
 assert.doesNotMatch(html, /world-map-indicator[^>]*aria-hidden/);
 assert.match(game, /document\.createElement\("button"\)[\s\S]*?className = "world-map-dot"/);
@@ -40,7 +40,7 @@ assert.match(game, /image\.decode\?\.\(\)/);
 assert.match(game, /selectWorldMapPage\(pageIndex\);\s*finishScreenLoading\(el\.screenWorldMap, loadingToken\)/);
 assert.match(game, /function v2GameBackground\(size, mode\)/);
 assert.match(game, /setProperty\("--game-map-background-image"/);
-assert.match(css, /body\[data-app-screen="game"\]::after[\s\S]*?var\(--game-map-background-image\)/);
+assert.match(css, /body\[data-app-screen="game"\]::after[\s\S]*?center \/ contain no-repeat var\(--game-map-background-image\)/);
 assert.doesNotMatch(css, /body\[data-app-screen="(?:world-map|small-map)"\]::before/);
 assert.match(css, /\.map-screen\s*\{[\s\S]*?background: transparent/);
 

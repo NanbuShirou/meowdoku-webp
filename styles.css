@@ -5049,7 +5049,7 @@ body[data-app-screen="game"]::after {
   inset: 0;
   width: auto;
   aspect-ratio: auto;
-  background: center / cover no-repeat var(--game-map-background-image);
+  background: center / contain no-repeat var(--game-map-background-image);
 }
 
 /* v54: compact gameplay header and simplified maps. */
