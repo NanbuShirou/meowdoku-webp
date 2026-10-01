@@ -8,6 +8,7 @@ const web = root;
 const read = (name) => fs.readFileSync(path.join(web, name), "utf8");
 const html = read("index.html");
 const game = read("game.js");
+const css = read("styles.css");
 const settingsPages = read("settings-pages.js");
 const sound = read("sound.js");
 const index = JSON.parse(read("levels_index.json"));
@@ -23,6 +24,20 @@ assert.match(sound, /new Audio\("raw\/meow\.wav"\)/);
 assert.match(game, /levels\/normal/);
 assert.match(game, /levels\/hard/);
 assert.match(game, /levels\/extra/);
+assert.match(html, /styles\.css\?v=2\.0\.1/);
+assert.match(html, /game\.js\?v=2\.0\.1/);
+assert.doesNotMatch(html, /world-map-indicator[^>]*aria-hidden/);
+assert.match(game, /document\.createElement\("button"\)[\s\S]*?className = "world-map-dot"/);
+assert.match(game, /Math\.ceil\(frameWidth\) - frameWidth/);
+assert.doesNotMatch(game, /height \* 4 \/ 49/);
+assert.match(html, /id="loading-overlay"/);
+assert.match(html, /images\/UI\/background\.png/);
+assert.match(css, /--theme-background-image: url\("images\/UI\/background\.png"\)/);
+assert.match(game, /function startScreenLoading\(\)/);
+assert.match(game, /function finishScreenLoading\(root, token\)/);
+assert.match(game, /image\.decode\?\.\(\)/);
+assert.match(game, /selectWorldMapPage\(pageIndex\);\s*finishScreenLoading\(el\.screenWorldMap, loadingToken\)/);
+assert.doesNotMatch(`${game}\n${css}`, /game-map-background-image/);
 
 const played = [];
 class FakeAudio {
@@ -45,7 +60,8 @@ for (const name of ["index.html", "styles.css", "themes/default.css", "themes/ce
     : [...source.matchAll(/url\(["']?([^"')]+)["']?\)/g)].map((match) => match[1]);
   for (const reference of references) {
     if (/^(?:data:|https?:|#)/.test(reference)) continue;
-    assert.ok(fs.existsSync(path.resolve(path.dirname(file), reference)), `${name}: missing ${reference}`);
+    const localReference = reference.split(/[?#]/, 1)[0];
+    assert.ok(fs.existsSync(path.resolve(path.dirname(file), localReference)), `${name}: missing ${reference}`);
   }
 }
 

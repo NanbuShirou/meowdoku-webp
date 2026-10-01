@@ -5,10 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Meowdoku 🐱</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2.0.1">
   <link id="theme-css" rel="stylesheet" href="themes/default.css">
   <link rel="stylesheet" href="themes/cell-styles.css">
   <link rel="preload" as="image" href="images/UI/mark_paper.png">
+  <link rel="preload" as="image" href="images/UI/background.png">
   <link rel="preload" as="image" href="images/UI/CatRun01.png">
   <link rel="preload" as="image" href="images/UI/CatRun02.png">
   <link rel="icon"
@@ -16,6 +17,11 @@
 </head>
 
 <body>
+  <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite" aria-label="讀取中">
+    <span class="loading-spinner" aria-hidden="true"></span>
+    <span>讀取中…</span>
+  </div>
+
   <header class="app-header">
     <h1><img class="app-header-title" src="images/UI/Titel.png" alt="Meowdoku"></h1>
   </header>
@@ -92,7 +98,7 @@
         </button>
       </div>
       <div id="world-map-pager" class="world-map-pager" aria-label="世界地圖"></div>
-      <div id="world-map-indicator" class="world-map-indicator" aria-hidden="true"></div>
+      <div id="world-map-indicator" class="world-map-indicator" aria-label="切換世界地圖"></div>
       <div id="difficulty-picker" class="difficulty-picker hidden" role="dialog" aria-modal="true" aria-labelledby="difficulty-picker-title">
         <div class="difficulty-picker-panel">
           <button id="btn-difficulty-close" class="difficulty-close" type="button" aria-label="關閉">×</button>
@@ -666,7 +672,7 @@
   <script src="record-scope.js"></script>
   <script src="settings-pages.js"></script>
   <script src="map-data.js"></script>
-  <script src="game.js"></script>
+  <script src="game.js?v=2.0.1"></script>
   <script src="share-code-format.js"></script>
   <script src="share-code.js"></script>
   <script src="selection-ui.js"></script>

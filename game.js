@@ -448,6 +448,7 @@ const el = {
   cellStyleButtons: document.getElementById("cell-style-buttons"),
   cellStyleCurrentName: document.getElementById("cell-style-current-name"),
   screenEntry: document.getElementById("screen-entry"),
+  loadingOverlay: document.getElementById("loading-overlay"),
   screenHome: document.getElementById("screen-home"),
   screenLevelModes: document.getElementById("screen-level-modes"),
   screenWorldMap: document.getElementById("screen-world-map"),
@@ -732,6 +733,32 @@ globalThis.renderGameHistory = renderGameHistory;
 
 const soundManager = globalThis.SoundManager ? new globalThis.SoundManager() : null;
 soundManager?.configure({ enabled: settings.soundEffects });
+
+let screenLoadToken = 0;
+
+function startScreenLoading() {
+  const token = ++screenLoadToken;
+  el.loadingOverlay?.classList.remove("hidden");
+  document.body.setAttribute("aria-busy", "true");
+  return token;
+}
+
+async function waitForImages(root) {
+  const images = [...root.querySelectorAll("img[src]")];
+  await Promise.all(images.map((image) => image.complete ? Promise.resolve() : new Promise((resolve) => {
+    image.addEventListener("load", resolve, { once: true });
+    image.addEventListener("error", resolve, { once: true });
+  })));
+  await Promise.all(images.map((image) => image.decode?.().catch(() => {}) || Promise.resolve()));
+}
+
+function finishScreenLoading(root, token) {
+  waitForImages(root).finally(() => {
+    if (token !== screenLoadToken) return;
+    el.loadingOverlay?.classList.add("hidden");
+    document.body.removeAttribute("aria-busy");
+  });
+}
 
 // ── Haptic ───────────────────────────────────────────────────────────────────
 
@@ -1203,14 +1230,6 @@ function totalExtraLevels(difficulty) {
   );
 }
 
-function v2GameBackground(size, mode) {
-  if (mode === "random") return "images/smallmap/1map08.png";
-  const difficulty = mode === "fixed" ? "normal" : mode;
-  return ["normal", "hard"].includes(difficulty)
-    ? V2_MAP_DATA.smallMaps[`${size}:${difficulty}`]?.background || ""
-    : "";
-}
-
 function v2StarKey(size, difficulty, localLevel) {
   return difficulty === "hard"
     ? `hard:${v2HardLevel(size, localLevel)}`
@@ -1347,6 +1366,21 @@ function syncWorldMapAssets() {
   });
 }
 
+function selectWorldMapPage(page, behavior = "smooth") {
+  const pageCount = V2_MAP_DATA?.worldPages?.length || 1;
+  state.worldPage = Math.max(0, Math.min(pageCount - 1, Number(page) || 0));
+  syncWorldMapIndicator();
+  syncWorldMapAssets();
+  const height = el.worldMapPager?.clientHeight || 0;
+  if (height > 0) {
+    el.worldMapPager.scrollTo({
+      top: invertWorldPage(state.worldPage, pageCount) * height,
+      behavior,
+    });
+  }
+  if (history.state?.screen === "world-map") history.replaceState(v2HistoryState("world-map"), "");
+}
+
 function renderWorldMap() {
   if (!V2_MAP_DATA || !el.worldMapPager || !el.worldMapIndicator) return;
   el.worldMapPager.innerHTML = "";
@@ -1395,20 +1429,23 @@ function renderWorldMap() {
     });
     el.worldMapPager.appendChild(section);
 
-    const dot = document.createElement("span");
+    const dot = document.createElement("button");
+    dot.type = "button";
     dot.className = "world-map-dot";
     dot.dataset.page = String(pageIndex);
+    dot.textContent = String(pageIndex + 1);
+    dot.setAttribute("aria-label", `切換到世界地圖 ${pageIndex + 1}`);
+    dot.addEventListener("click", () => {
+      const loadingToken = startScreenLoading();
+      selectWorldMapPage(pageIndex);
+      finishScreenLoading(el.screenWorldMap, loadingToken);
+    });
     el.worldMapIndicator.appendChild(dot);
   });
 
   syncWorldMapIndicator();
   syncWorldMapAssets();
-  requestAnimationFrame(() => {
-    const height = el.worldMapPager.clientHeight;
-    if (height > 0) {
-      el.worldMapPager.scrollTop = invertWorldPage(state.worldPage, V2_MAP_DATA.worldPages.length) * height;
-    }
-  });
+  requestAnimationFrame(() => selectWorldMapPage(state.worldPage, "auto"));
 }
 
 function closeDifficultyPicker() {
@@ -1418,6 +1455,7 @@ function closeDifficultyPicker() {
 
 function showDifficultyPicker(size, pushHistory = true) {
   if (!V2_MAP_DATA || !Number.isInteger(size)) return;
+  const loadingToken = startScreenLoading();
   state.worldChoiceSize = size;
   if (el.difficultyPickerTitle) el.difficultyPickerTitle.textContent = `${size}×${size} 選擇難度`;
   if (el.difficultyOptions) {
@@ -1450,6 +1488,7 @@ function showDifficultyPicker(size, pushHistory = true) {
   }
   el.difficultyPicker?.classList.remove("hidden");
   if (pushHistory) history.pushState(v2HistoryState("world-map"), "");
+  finishScreenLoading(el.difficultyPicker, loadingToken);
 }
 
 function openV2SmallMap(size, difficulty) {
@@ -2339,6 +2378,7 @@ async function init() {
     : DEFAULT_HARD_LEVEL_COUNT;
   renderSizeButtons();
   renderRandomSizeButtons();
+  finishScreenLoading(document, screenLoadToken);
 }
 
 function renderRandomSizeButtons() {
@@ -2769,9 +2809,6 @@ function beginGame({ n, mode, levelIdx, regions, solution, seed, fromShareCode =
   state.mode = mode;
   state.levelIdx = levelIdx;
   state.levelChapter = chapter === "extra" ? "extra" : "base";
-  const gameBackground = v2GameBackground(state.n, mode);
-  if (gameBackground) document.body.style.setProperty("--game-map-background-image", `url("${gameBackground}")`);
-  else document.body.style.removeProperty("--game-map-background-image");
   randomLevelId = mode === "random" && typeof randomLevelId === "string" && randomLevelId
     ? randomLevelId
     : null;
@@ -2812,12 +2849,12 @@ function beginGame({ n, mode, levelIdx, regions, solution, seed, fromShareCode =
 
   el.statusBanner.classList.add("hidden");
   el.winTime?.classList.add("hidden");
-  showGameScreen();
   state.startedAt = performance.now();
   renderGameTitle(mode === "random" ? state.randomElapsedOffsetMs : 0);
   if (mode === "random") startRandomTitleTimer();
   renderBoard();
   renderHearts();
+  showGameScreen();
   if (settings.showHelp) el.helpModal.classList.remove("hidden");
 }
 
@@ -2882,6 +2919,7 @@ function hideAllAppScreens() {
 }
 
 function showAppScreen(screen, pushHistory = true) {
+  const loadingToken = startScreenLoading();
   closeBackpack();
   const target = APP_SCREEN_MAP[screen] ? screen : "home";
   if (["home", "level-modes", "world-map", "small-map", "level-book", "fixed-select", "random-select", "styles", "history", "history-random"].includes(target)) stopRandomTitleTimer();
@@ -2915,15 +2953,18 @@ function showAppScreen(screen, pushHistory = true) {
     if (history.state?.screen !== target) history.pushState(nextState, "");
     else history.replaceState(nextState, "");
   }
+  finishScreenLoading(APP_SCREEN_MAP[target](), loadingToken);
 }
 
 function showGameScreen() {
+  const loadingToken = startScreenLoading();
   hideAllAppScreens();
   document.body.dataset.appScreen = "game";
   el.screenGame.classList.remove("hidden");
   startGameplayTimer();
   if (history.state?.screen !== "game") history.pushState({ screen: "game" }, "");
   else history.replaceState({ screen: "game" }, "");
+  finishScreenLoading(el.screenGame, loadingToken);
 }
 
 function showSettingsScreen() {
@@ -3017,8 +3058,9 @@ function playCatRun(r, c) {
   const boardRect = el.board.getBoundingClientRect();
   const cellRect = cell.getBoundingClientRect();
   const height = cellRect.height * 1.25;
-  const frontPad = height * 4 / 49;
-  const width = height * 354 / 392 + frontPad;
+  const frameWidth = height * 354 / 392;
+  const frontPad = Math.ceil(frameWidth) - frameWidth;
+  const width = frameWidth + frontPad;
   const startX = cellRect.left - boardRect.left + (cellRect.width - width) / 2;
   const endX = runsRight ? boardRect.width + 2 : -width - 2;
   const runner = document.createElement("span");

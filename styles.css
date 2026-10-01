@@ -15,7 +15,7 @@
    from the selected accent colour. */
 :root {
   --theme-accent: #915DFF;
-  --theme-background-image: url("images/UI/background_Darkcolor.png");
+  --theme-background-image: url("images/UI/background.png");
   --back-icon-image: url("images/UI/back-dark.png");
   --setup-icon-image: url("images/UI/setup-dark.png");
   --theme-cat-image: url("images/UI/background_cat.png");
@@ -40,7 +40,7 @@
 
 html[data-theme-mode="dark"] {
   color-scheme: dark;
-  --theme-background-image: url("images/UI/background_Darkcolor.png");
+  --theme-background-image: url("images/UI/background.png");
   --back-icon-image: url("images/UI/back-dark.png");
   --setup-icon-image: url("images/UI/setup-dark.png");
   --theme-bg: #00042B;
@@ -60,7 +60,7 @@ html[data-theme-mode="dark"] {
 
 html[data-theme-mode="light"] {
   color-scheme: light;
-  --theme-background-image: url("images/UI/background_Lightcolor.png");
+  --theme-background-image: url("images/UI/background.png");
   --back-icon-image: url("images/UI/back-dark.png");
   --setup-icon-image: url("images/UI/setup-dark.png");
   --theme-bg: #EBE8D9;
@@ -119,6 +119,36 @@ button, input, select, textarea {
 
 .hidden {
   display: none !important;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  background: #e8bd6c;
+  color: #513414;
+  font-size: 1.05rem;
+}
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 5px solid rgba(81, 52, 20, .22);
+  border-top-color: #7b4b18;
+  border-radius: 50%;
+  animation: loading-spin .8s linear infinite;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(1turn); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner { animation: none; }
 }
 
 body {
@@ -1996,21 +2026,21 @@ html[data-theme-mode="dark"] .setting-toggle.off {
 /* Only the actual game board uses the reduced-decoration game background. */
 html[data-theme-mode="dark"] body[data-app-screen="game"] {
   --game-board-background-image: url("images/UI/background_Darkcolora.png");
-  --theme-background-image: var(--game-map-background-image, var(--game-board-background-image));
+  --theme-background-image: url("images/UI/background.png");
 }
 
 html[data-theme-mode="light"] body[data-app-screen="game"] {
   --game-board-background-image: url("images/UI/background_Darkcolora.png");
-  --theme-background-image: var(--game-map-background-image, var(--game-board-background-image));
+  --theme-background-image: url("images/UI/background.png");
 }
 
 /* Other pages always return to the normal decorative background. */
 html[data-theme-mode="dark"] body:not([data-app-screen="game"]) {
-  --theme-background-image: url("images/UI/background_Darkcolor.png");
+  --theme-background-image: url("images/UI/background.png");
 }
 
 html[data-theme-mode="light"] body:not([data-app-screen="game"]) {
-  --theme-background-image: url("images/UI/background_Lightcolor.png");
+  --theme-background-image: url("images/UI/background.png");
 }
 
 /* Other-page navigation icons: 34px -> 68px (2x). */
@@ -4468,24 +4498,30 @@ body[data-app-screen="small-map"] #app {
   position: absolute;
   z-index: 20;
   top: 50%;
-  right: 10px;
+  right: 8px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
   transform: translateY(-50%);
 }
 
 .world-map-dot {
-  width: 9px;
-  height: 9px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, .9);
   border-radius: 50%;
   background: rgba(0, 0, 0, .34);
+  color: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+  font-size: 1rem;
+  line-height: 1;
+  touch-action: manipulation;
 }
 
 .world-map-dot.active {
   background: #fff2a8;
-  transform: scale(1.35);
+  color: #342814;
+  transform: scale(1.08);
 }
 
 .difficulty-picker {
