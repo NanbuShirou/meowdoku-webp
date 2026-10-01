@@ -8,10 +8,8 @@
   <link rel="stylesheet" href="styles.css?v=2.0.7">
   <link id="theme-css" rel="stylesheet" href="themes/default.css">
   <link rel="stylesheet" href="themes/cell-styles.css?v=2.0.5">
-  <link rel="preload" as="image" href="images/UI/mark_paper.png">
   <link rel="preload" as="image" href="images/UI/background.png">
-  <link rel="preload" as="image" href="images/UI/CatRun01.png">
-  <link rel="preload" as="image" href="images/UI/CatRun02.png">
+  <link rel="preload" as="image" href="images/UI/Titel.png">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
 </head>
@@ -23,7 +21,7 @@
   </div>
 
   <header class="app-header">
-    <h1><img class="app-header-title" src="images/UI/Titel.png" alt="Meowdoku"></h1>
+    <h1><img class="app-header-title" src="images/UI/Titel.png" fetchpriority="high" alt="Meowdoku"></h1>
   </header>
 
   <main id="app">
@@ -33,11 +31,11 @@
 
     <section id="screen-home" class="screen hidden">
       <div class="home-menu" aria-label="主選單">
-        <button id="btn-home-levels" class="home-menu-button" type="button" aria-label="尋找貓貓，進入大地圖"><img src="images/bigmap/T01.png" alt=""></button>
-        <button id="btn-home-level-book" class="home-menu-button" type="button" aria-label="關卡手冊"><img src="images/bigmap/T02.png" alt=""></button>
-        <button id="btn-home-styles" class="home-menu-button" type="button" aria-label="方塊風格"><img src="images/bigmap/T03.png" alt=""></button>
-        <button id="btn-home-history" class="home-menu-button" type="button" aria-label="遊戲歷史"><img src="images/bigmap/T04.png" alt=""></button>
-        <button id="btn-home-settings" class="home-menu-button" type="button" aria-label="設定"><img src="images/bigmap/T05.png" alt=""></button>
+        <button id="btn-home-levels" class="home-menu-button" type="button" aria-label="尋找貓貓，進入大地圖"><img src="images/bigmap/T01.png" loading="lazy" alt=""></button>
+        <button id="btn-home-level-book" class="home-menu-button" type="button" aria-label="關卡手冊"><img src="images/bigmap/T02.png" loading="lazy" alt=""></button>
+        <button id="btn-home-styles" class="home-menu-button" type="button" aria-label="方塊風格"><img src="images/bigmap/T03.png" loading="lazy" alt=""></button>
+        <button id="btn-home-history" class="home-menu-button" type="button" aria-label="遊戲歷史"><img src="images/bigmap/T04.png" loading="lazy" alt=""></button>
+        <button id="btn-home-settings" class="home-menu-button" type="button" aria-label="設定"><img src="images/bigmap/T05.png" loading="lazy" alt=""></button>
       </div>
     </section>
 
@@ -125,7 +123,7 @@
         <div id="small-map-stages" class="small-map-stages"></div>
         <div id="small-map-status" class="small-map-status hidden" role="status"></div>
         <button id="btn-wormhole-share" class="wormhole-share-button hidden" type="button" aria-label="載入分享碼關卡">
-          <img src="images/smallmap/sBtn09g.png" alt="">
+          <img src="images/smallmap/sBtn09g.png" loading="lazy" alt="">
         </button>
       </div>
     </section>
@@ -242,15 +240,15 @@
         </div>
         <div class="style-preview-frame">
           <div id="cell-style-preview" class="board style-preview-board" aria-label="目前方塊風格預覽">
-            <div class="cell" data-region="0" data-state="2"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="1" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="1" data-state="1"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="2" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="3" data-state="3"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="4" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="2" data-state="1"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="4" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
-            <div class="cell" data-region="5" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="0" data-state="2"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="1" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="1" data-state="1"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="2" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="3" data-state="3"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="4" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="2" data-state="1"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="4" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
+            <div class="cell" data-region="5" data-state="0"><span class="mark"><span class="bar"></span><span class="bar"></span></span><span class="cat-icon">🐱</span><img class="hypo-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></div>
           </div>
         </div>
       </div>
@@ -273,16 +271,16 @@
         <section class="selection-block history-card">
           <div class="history-card-heading">
             <h2>一般關卡</h2>
-            <span id="history-fixed-stars" class="history-paw-total"><span class="paw-icons" aria-label="肉球"><img src="images/UI/ui_icon_paw.png" alt=""></span> 0 / 2,100</span>
+            <span id="history-fixed-stars" class="history-paw-total"><span class="paw-icons" aria-label="肉球"><img src="images/UI/ui_icon_paw.png" loading="lazy" alt=""></span> 0 / 2,100</span>
           </div>
           <div class="level-book-progress history-progress-summary">
             <div id="history-fixed-progress-fill" class="level-book-progress-ring" style="--level-book-progress: 0%" role="progressbar" aria-label="一般關卡三星完成進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
               <strong id="history-fixed-percent">0%</strong>
             </div>
             <div class="level-book-progress-stats">
-              <span><b><img src="images/UI/ui_mapspot_cleared.png" alt="">通過</b><strong id="history-fixed-passed">0 / 700</strong></span>
-              <span><b><img src="images/UI/ui_stagenode_05.png" alt="">完成</b><strong id="history-fixed-completed">0 / 700</strong></span>
-              <span><b><img src="images/UI/ui_stagenode_00.png" alt="">中途紀錄</b><strong id="history-fixed-saved">0</strong></span>
+              <span><b><img src="images/UI/ui_mapspot_cleared.png" loading="lazy" alt="">通過</b><strong id="history-fixed-passed">0 / 700</strong></span>
+              <span><b><img src="images/UI/ui_stagenode_05.png" loading="lazy" alt="">完成</b><strong id="history-fixed-completed">0 / 700</strong></span>
+              <span><b><img src="images/UI/ui_stagenode_00.png" loading="lazy" alt="">中途紀錄</b><strong id="history-fixed-saved">0</strong></span>
             </div>
           </div>
         </section>
@@ -290,16 +288,16 @@
         <section class="selection-block history-card">
           <div class="history-card-heading">
             <h2>高難度關卡</h2>
-            <span id="history-hard-stars" class="history-paw-total"><span class="paw-icons" aria-label="肉球"><img src="images/UI/ui_icon_paw.png" alt=""></span> 0 / 2,100</span>
+            <span id="history-hard-stars" class="history-paw-total"><span class="paw-icons" aria-label="肉球"><img src="images/UI/ui_icon_paw.png" loading="lazy" alt=""></span> 0 / 2,100</span>
           </div>
           <div class="level-book-progress history-progress-summary">
             <div id="history-hard-progress-fill" class="level-book-progress-ring" style="--level-book-progress: 0%" role="progressbar" aria-label="高難度關卡三星完成進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
               <strong id="history-hard-percent">0%</strong>
             </div>
             <div class="level-book-progress-stats">
-              <span><b><img src="images/UI/ui_mapspot_cleared.png" alt="">通過</b><strong id="history-hard-passed">0 / 700</strong></span>
-              <span><b><img src="images/UI/ui_stagenode_05.png" alt="">完成</b><strong id="history-hard-completed">0 / 700</strong></span>
-              <span><b><img src="images/UI/ui_stagenode_00.png" alt="">中途紀錄</b><strong id="history-hard-saved">0</strong></span>
+              <span><b><img src="images/UI/ui_mapspot_cleared.png" loading="lazy" alt="">通過</b><strong id="history-hard-passed">0 / 700</strong></span>
+              <span><b><img src="images/UI/ui_stagenode_05.png" loading="lazy" alt="">完成</b><strong id="history-hard-completed">0 / 700</strong></span>
+              <span><b><img src="images/UI/ui_stagenode_00.png" loading="lazy" alt="">中途紀錄</b><strong id="history-hard-saved">0</strong></span>
             </div>
           </div>
         </section>
@@ -360,15 +358,15 @@
       <div class="game-toolbar tool-row">
         <button id="btn-restart" aria-label="重排版面">重排版面</button>
         <button id="btn-toggle-auto" class="tool-toggle" aria-label="自動排除">自動排除</button>
-        <button id="btn-toggle-hypo" class="tool-toggle hypo-tool" aria-label="記號"><span class="hypo-tool-label">記號</span><img class="hypo-tool-icon" src="images/UI/cat_footprints.png" alt="" aria-hidden="true"></button>
+        <button id="btn-toggle-hypo" class="tool-toggle hypo-tool" aria-label="記號"><span class="hypo-tool-label">記號</span><img class="hypo-tool-icon" src="images/UI/cat_footprints.png" loading="lazy" alt="" aria-hidden="true"></button>
       </div>
       <div id="board" class="board"></div>
       <div id="status-banner" class="status-banner hidden"></div>
 
       <div id="game-bottom-actions" class="game-bottom-actions" aria-label="遊戲操作">
-        <button id="btn-backpack" class="game-bottom-action" type="button" aria-label="打開背包" title="打開背包"><img src="images/UI/Game_01.png" alt="" aria-hidden="true"></button>
-        <button id="btn-save-progress" class="game-bottom-action" type="button" aria-label="中途紀錄" title="中途紀錄"><img src="images/UI/Game_02.png" alt="" aria-hidden="true"></button>
-        <button id="btn-share-code" class="game-bottom-action hidden" type="button" aria-label="關卡分享" title="關卡分享"><img src="images/UI/Game_04.png" alt="" aria-hidden="true"></button>
+        <button id="btn-backpack" class="game-bottom-action" type="button" aria-label="打開背包" title="打開背包"><img src="images/UI/Game_01.png" loading="lazy" alt="" aria-hidden="true"></button>
+        <button id="btn-save-progress" class="game-bottom-action" type="button" aria-label="中途紀錄" title="中途紀錄"><img src="images/UI/Game_02.png" loading="lazy" alt="" aria-hidden="true"></button>
+        <button id="btn-share-code" class="game-bottom-action hidden" type="button" aria-label="關卡分享" title="關卡分享"><img src="images/UI/Game_04.png" loading="lazy" alt="" aria-hidden="true"></button>
       </div>
 
       <div id="detector-select-hint" class="detector-select-hint hidden" role="status">請選擇偵測中心方塊 <button id="btn-detector-cancel" type="button">取消</button></div>
@@ -390,25 +388,25 @@
           </div>
           <div id="backpack-list">
             <div class="backpack-item">
-              <button id="btn-item-detector" class="game-bottom-action item-icon-button" type="button" aria-label="使用偵測器"><img src="images/UI/Game_05.png" alt="" aria-hidden="true"></button>
+              <button id="btn-item-detector" class="game-bottom-action item-icon-button" type="button" aria-label="使用偵測器"><img src="images/UI/Game_05.png" loading="lazy" alt="" aria-hidden="true"></button>
               <b class="item-name">偵測器</b>
               <span id="item-detector-count" class="item-count"></span>
               <span class="item-description">可以搜尋附近的貓</span>
-              <button class="game-bottom-action item-icon-button" type="button" data-item-manual="偵測器" aria-label="偵測器說明" title="偵測器說明"><img src="images/UI/manual.png" alt="" aria-hidden="true"></button>
+              <button class="game-bottom-action item-icon-button" type="button" data-item-manual="偵測器" aria-label="偵測器說明" title="偵測器說明"><img src="images/UI/manual.png" loading="lazy" alt="" aria-hidden="true"></button>
             </div>
             <div class="backpack-item">
-              <button id="btn-item-fish" class="game-bottom-action item-icon-button" type="button" aria-label="使用小魚乾"><img src="images/UI/Game_06.png" alt="" aria-hidden="true"></button>
+              <button id="btn-item-fish" class="game-bottom-action item-icon-button" type="button" aria-label="使用小魚乾"><img src="images/UI/Game_06.png" loading="lazy" alt="" aria-hidden="true"></button>
               <b class="item-name">小魚乾</b>
               <span id="item-fish-count" class="item-count"></span>
               <span class="item-description">可以增加找到貓的機會</span>
-              <button class="game-bottom-action item-icon-button" type="button" data-item-manual="小魚乾" aria-label="小魚乾說明" title="小魚乾說明"><img src="images/UI/manual.png" alt="" aria-hidden="true"></button>
+              <button class="game-bottom-action item-icon-button" type="button" data-item-manual="小魚乾" aria-label="小魚乾說明" title="小魚乾說明"><img src="images/UI/manual.png" loading="lazy" alt="" aria-hidden="true"></button>
             </div>
             <div class="backpack-item">
-              <button id="btn-item-breadcrumb" class="game-bottom-action item-icon-button" type="button" aria-label="使用麵包屑"><img src="images/UI/Game_07.png" alt="" aria-hidden="true"></button>
+              <button id="btn-item-breadcrumb" class="game-bottom-action item-icon-button" type="button" aria-label="使用麵包屑"><img src="images/UI/Game_07.png" loading="lazy" alt="" aria-hidden="true"></button>
               <b class="item-name">麵包屑</b>
               <span id="item-breadcrumb-count" class="item-count"></span>
               <span class="item-description">回到上次找到貓的地方</span>
-              <button class="game-bottom-action item-icon-button" type="button" data-item-manual="麵包屑" aria-label="麵包屑說明" title="麵包屑說明"><img src="images/UI/manual.png" alt="" aria-hidden="true"></button>
+              <button class="game-bottom-action item-icon-button" type="button" data-item-manual="麵包屑" aria-label="麵包屑說明" title="麵包屑說明"><img src="images/UI/manual.png" loading="lazy" alt="" aria-hidden="true"></button>
             </div>
             <div class="modal-buttons"><button id="btn-backpack-close" type="button">關閉</button></div>
           </div>
@@ -420,7 +418,7 @@
       </div>
       <div id="win-modal" class="modal-overlay hidden">
         <div class="modal-box">
-          <img class="modal-emoji" src="images/UI/background_cat2.png" id="result-modal-image" alt="" aria-hidden="true">
+          <img class="modal-emoji" src="images/UI/background_cat2.png" loading="lazy" id="result-modal-image" alt="" aria-hidden="true">
           <div class="modal-title" id="result-modal-title">完成！</div>
           <div id="win-time" class="win-time hidden"></div>
           <div class="modal-buttons">
@@ -645,7 +643,7 @@
 
     <div id="help-modal" class="modal-overlay hidden">
       <div class="modal-box">
-        <img class="help-cat-head" src="images/UI/C00.png" alt="" aria-hidden="true">
+        <img class="help-cat-head" src="images/UI/C00.png" loading="lazy" alt="" aria-hidden="true">
         <div class="modal-title" style="font-size:1.1rem;margin-bottom:16px">遊戲說明</div>
         <div class="help-content">
           <h3>規則</h3>
@@ -673,7 +671,7 @@
   <script src="record-scope.js"></script>
   <script src="settings-pages.js"></script>
   <script src="map-data.js"></script>
-  <script src="game.js?v=2.0.7"></script>
+  <script src="game.js?v=2.0.8"></script>
   <script src="share-code-format.js"></script>
   <script src="share-code.js"></script>
   <script src="selection-ui.js"></script>

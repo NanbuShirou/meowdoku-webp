@@ -745,7 +745,7 @@ function startScreenLoading() {
 }
 
 async function waitForImages(root) {
-  const images = [...root.querySelectorAll("img[src]")];
+  const images = [...root.querySelectorAll("img[src]")].filter((image) => image.getClientRects().length > 0);
   await Promise.all(images.map((image) => image.complete ? Promise.resolve() : new Promise((resolve) => {
     image.addEventListener("load", resolve, { once: true });
     image.addEventListener("error", resolve, { once: true });
@@ -2024,6 +2024,7 @@ async function init() {
     const button = event.target instanceof Element ? event.target.closest("button") : null;
     if (button && !button.disabled) soundManager?.playButton();
   }, true);
+  document.addEventListener("dblclick", (event) => event.preventDefault());
 
   el.btnEntryStart?.addEventListener("click", () => showAppScreen("home"));
   el.btnHomeLevels?.addEventListener("click", () => {
