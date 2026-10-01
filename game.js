@@ -3075,14 +3075,12 @@ function playCatRun(r, c) {
   const boardRect = el.board.getBoundingClientRect();
   const cellRect = cell.getBoundingClientRect();
   const height = cellRect.height * 1.25;
-  const frameWidth = height * 354 / 392;
   const pixelRatio = globalThis.devicePixelRatio || 1;
-  const width = Math.max(1, Math.floor(frameWidth * pixelRatio) / pixelRatio);
-  const frameShift = width * 32 / 354;
+  const width = Math.max(1, Math.floor(height * 44 / 49 * pixelRatio) / pixelRatio);
   const startX = cellRect.left - boardRect.left + (cellRect.width - width) / 2;
   const endX = runsRight ? boardRect.width + 2 : -width - 2;
   const runner = document.createElement("span");
-  const strip = document.createElement("img");
+  const sprite = document.createElement("span");
   runner.className = `cat-runner ${runsRight ? "right" : "left"}`;
   runner.setAttribute("aria-hidden", "true");
   runner.style.left = `${startX}px`;
@@ -3090,10 +3088,8 @@ function playCatRun(r, c) {
   runner.style.width = `${width}px`;
   runner.style.height = `${height}px`;
   runner.style.setProperty("--cat-run-distance", `${endX - startX}px`);
-  runner.style.setProperty("--cat-run-frame-shift", `${runsRight ? -frameShift : frameShift}px`);
-  strip.src = `images/UI/CatRun${runsRight ? "01" : "02"}.png`;
-  strip.alt = "";
-  runner.appendChild(strip);
+  sprite.className = "cat-run-frame";
+  runner.appendChild(sprite);
   el.board.appendChild(runner);
 
   return new Promise((resolve) => {

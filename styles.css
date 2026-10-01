@@ -972,15 +972,20 @@ h2 {
   will-change: transform, opacity;
 }
 
-.cat-runner img {
-  position: relative;
-  display: block;
-  width: 800%;
-  height: 100%;
-  max-width: none;
-  left: var(--cat-run-frame-shift);
-  animation: cat-run-steps 560ms steps(8) infinite;
+.cat-run-frame {
+  position: absolute;
+  inset: 0;
+  background: left top / auto 100% no-repeat url("images/UI/CatRun02.png");
+  animation: cat-run-bob 180ms ease-in-out infinite alternate;
   image-rendering: pixelated;
+}
+
+.cat-runner.right .cat-run-frame {
+  --cat-run-direction: -1;
+}
+
+.cat-runner.left .cat-run-frame {
+  --cat-run-direction: 1;
 }
 
 @keyframes cat-run-away {
@@ -991,8 +996,9 @@ h2 {
   }
 }
 
-@keyframes cat-run-steps {
-  to { transform: translateX(-100%); }
+@keyframes cat-run-bob {
+  from { transform: scaleX(var(--cat-run-direction)) translateY(0) rotate(-2deg); }
+  to { transform: scaleX(var(--cat-run-direction)) translateY(-7%) rotate(2deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5163,6 +5169,68 @@ body[data-app-screen="game"] #board {
   color: #fff;
   font-size: .82rem;
   line-height: 1;
+}
+
+/* Keep the full game UI inside the visible viewport, including 720p screens. */
+body[data-app-screen="game"] {
+  overflow: hidden;
+}
+
+body[data-app-screen="game"] #app {
+  height: calc(100dvh - env(safe-area-inset-top, 0px));
+  padding: 6px 16px max(6px, env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+}
+
+#screen-game {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+}
+
+#screen-game .game-nav-row {
+  margin-bottom: 4px;
+}
+
+#screen-game .game-nav-row .icon-button {
+  width: 56px !important;
+  height: 56px !important;
+}
+
+#screen-game .game-nav-row .theme-nav-icon {
+  width: 52px !important;
+  height: 52px !important;
+}
+
+#screen-game .game-nav-center {
+  height: 56px;
+}
+
+#screen-game .game-toolbar.tool-row {
+  margin: 4px 0;
+}
+
+#screen-game .game-toolbar.tool-row button {
+  padding-block: 7px;
+}
+
+body[data-app-screen="game"] #board {
+  width: min(100%, calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  margin: 8px auto 0;
+}
+
+#screen-game .game-bottom-actions {
+  margin: 8px 0 0;
+}
+
+#screen-game .game-bottom-action {
+  min-height: 56px;
+  flex-basis: 56px;
+}
+
+#screen-game .game-bottom-action img {
+  height: 56px;
 }
 
 /* ── v2 level book and illustrated home menu ─────────────────────────── */
