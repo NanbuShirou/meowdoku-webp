@@ -24,20 +24,25 @@ assert.match(sound, /new Audio\("raw\/meow\.wav"\)/);
 assert.match(game, /levels\/normal/);
 assert.match(game, /levels\/hard/);
 assert.match(game, /levels\/extra/);
-assert.match(html, /styles\.css\?v=2\.0\.1/);
-assert.match(html, /game\.js\?v=2\.0\.1/);
+assert.match(html, /styles\.css\?v=2\.0\.2/);
+assert.match(html, /game\.js\?v=2\.0\.2/);
 assert.doesNotMatch(html, /world-map-indicator[^>]*aria-hidden/);
 assert.match(game, /document\.createElement\("button"\)[\s\S]*?className = "world-map-dot"/);
 assert.match(game, /Math\.ceil\(frameWidth\) - frameWidth/);
 assert.doesNotMatch(game, /height \* 4 \/ 49/);
 assert.match(html, /id="loading-overlay"/);
+assert.match(html, /id="game-map-background-preload"/);
 assert.match(html, /images\/UI\/background\.png/);
 assert.match(css, /--theme-background-image: url\("images\/UI\/background\.png"\)/);
 assert.match(game, /function startScreenLoading\(\)/);
 assert.match(game, /function finishScreenLoading\(root, token\)/);
 assert.match(game, /image\.decode\?\.\(\)/);
 assert.match(game, /selectWorldMapPage\(pageIndex\);\s*finishScreenLoading\(el\.screenWorldMap, loadingToken\)/);
-assert.doesNotMatch(`${game}\n${css}`, /game-map-background-image/);
+assert.match(game, /function v2GameBackground\(size, mode\)/);
+assert.match(game, /setProperty\("--game-map-background-image"/);
+assert.match(css, /body\[data-app-screen="game"\]::after[\s\S]*?var\(--game-map-background-image\)/);
+assert.doesNotMatch(css, /body\[data-app-screen="(?:world-map|small-map)"\]::before/);
+assert.match(css, /\.map-screen\s*\{[\s\S]*?background: transparent/);
 
 const played = [];
 class FakeAudio {

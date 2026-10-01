@@ -2026,12 +2026,10 @@ html[data-theme-mode="dark"] .setting-toggle.off {
 /* Only the actual game board uses the reduced-decoration game background. */
 html[data-theme-mode="dark"] body[data-app-screen="game"] {
   --game-board-background-image: url("images/UI/background_Darkcolora.png");
-  --theme-background-image: url("images/UI/background.png");
 }
 
 html[data-theme-mode="light"] body[data-app-screen="game"] {
   --game-board-background-image: url("images/UI/background_Darkcolora.png");
-  --theme-background-image: url("images/UI/background.png");
 }
 
 /* Other pages always return to the normal decorative background. */
@@ -4341,9 +4339,7 @@ body[data-app-screen="small-map"] {
   padding-top: 0;
 }
 
-body[data-app-screen="world-map"]::before,
 body[data-app-screen="world-map"]::after,
-body[data-app-screen="small-map"]::before,
 body[data-app-screen="small-map"]::after,
 body[data-app-screen="world-map"] > .app-header,
 body[data-app-screen="small-map"] > .app-header {
@@ -4366,7 +4362,7 @@ body[data-app-screen="small-map"] #app {
   height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
-  background: #0d2030;
+  background: transparent;
 }
 
 .map-toolbar {
@@ -4441,7 +4437,7 @@ body[data-app-screen="small-map"] #app {
   overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  background: #173b51;
+  background: transparent;
 }
 
 .world-map-background,
@@ -4665,7 +4661,7 @@ body[data-app-screen="small-map"] #app {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #13263c;
+  background: transparent;
 }
 
 .small-map-spots,
@@ -5047,6 +5043,13 @@ body[data-app-screen="game"] .board::before {
   border-radius: calc(var(--board-radius, 12px) + 5px);
   background: center / cover no-repeat var(--game-board-background-image);
   pointer-events: none;
+}
+
+body[data-app-screen="game"]::after {
+  inset: 0;
+  width: auto;
+  aspect-ratio: auto;
+  background: center / cover no-repeat var(--game-map-background-image);
 }
 
 /* v54: compact gameplay header and simplified maps. */

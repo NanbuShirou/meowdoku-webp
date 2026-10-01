@@ -460,6 +460,7 @@ const el = {
   screenHistory: document.getElementById("screen-history"),
   screenHistoryRandom: document.getElementById("screen-history-random"),
   screenGame: document.getElementById("screen-game"),
+  gameMapBackgroundPreload: document.getElementById("game-map-background-preload"),
   screenSettings: document.getElementById("screen-settings"),
   screenReminderIcons: document.getElementById("screen-reminder-icons"),
   screenBlockColors: document.getElementById("screen-block-colors"),
@@ -1228,6 +1229,14 @@ function totalExtraLevels(difficulty) {
   return Object.values(state.extraLevels?.[difficulty] || {}).reduce(
     (sum, count) => sum + Math.max(0, Number(count) || 0), 0
   );
+}
+
+function v2GameBackground(size, mode) {
+  if (mode === "random") return "images/smallmap/1map08.png";
+  const difficulty = mode === "fixed" ? "normal" : mode;
+  return ["normal", "hard"].includes(difficulty)
+    ? V2_MAP_DATA.smallMaps[`${size}:${difficulty}`]?.background || ""
+    : "";
 }
 
 function v2StarKey(size, difficulty, localLevel) {
@@ -2809,6 +2818,14 @@ function beginGame({ n, mode, levelIdx, regions, solution, seed, fromShareCode =
   state.mode = mode;
   state.levelIdx = levelIdx;
   state.levelChapter = chapter === "extra" ? "extra" : "base";
+  const gameBackground = v2GameBackground(state.n, mode);
+  if (gameBackground) {
+    document.body.style.setProperty("--game-map-background-image", `url("${gameBackground}")`);
+    el.gameMapBackgroundPreload.src = gameBackground;
+  } else {
+    document.body.style.removeProperty("--game-map-background-image");
+    el.gameMapBackgroundPreload.removeAttribute("src");
+  }
   randomLevelId = mode === "random" && typeof randomLevelId === "string" && randomLevelId
     ? randomLevelId
     : null;
