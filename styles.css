@@ -975,15 +975,11 @@ h2 {
 .cat-runner img {
   position: relative;
   display: block;
-  width: auto;
+  width: 800%;
   height: 100%;
   max-width: none;
   animation: cat-run-steps 560ms steps(8) infinite;
   image-rendering: pixelated;
-}
-
-.cat-runner.left img {
-  left: var(--cat-run-front-pad);
 }
 
 @keyframes cat-run-away {

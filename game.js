@@ -3076,8 +3076,8 @@ function playCatRun(r, c) {
   const cellRect = cell.getBoundingClientRect();
   const height = cellRect.height * 1.25;
   const frameWidth = height * 354 / 392;
-  const frontPad = Math.ceil(frameWidth) - frameWidth;
-  const width = frameWidth + frontPad;
+  const pixelRatio = globalThis.devicePixelRatio || 1;
+  const width = Math.max(1, Math.floor(frameWidth * pixelRatio) / pixelRatio);
   const startX = cellRect.left - boardRect.left + (cellRect.width - width) / 2;
   const endX = runsRight ? boardRect.width + 2 : -width - 2;
   const runner = document.createElement("span");
@@ -3089,7 +3089,6 @@ function playCatRun(r, c) {
   runner.style.width = `${width}px`;
   runner.style.height = `${height}px`;
   runner.style.setProperty("--cat-run-distance", `${endX - startX}px`);
-  runner.style.setProperty("--cat-run-front-pad", `${frontPad}px`);
   strip.src = `images/UI/CatRun${runsRight ? "01" : "02"}.png`;
   strip.alt = "";
   runner.appendChild(strip);
