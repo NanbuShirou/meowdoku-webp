@@ -4,6 +4,10 @@
   class SoundManager {
     constructor() {
       this.enabled = true;
+      this.sounds = typeof Audio === "function" ? {
+        button: new Audio("raw/button.wav"),
+        meow: new Audio("raw/meow.wav"),
+      } : {};
     }
 
     configure({ enabled = true } = {}) {
@@ -24,9 +28,10 @@
 
     play(name) {
       if (!this.enabled) return;
-      try {
-        globalThis.MeowdokuAndroid?.playSoundEffect(name);
-      } catch { }
+      const sound = this.sounds[name];
+      if (!sound) return;
+      try { sound.currentTime = 0; } catch { }
+      try { sound.play()?.catch(() => { }); } catch { }
     }
   }
 
