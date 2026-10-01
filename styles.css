@@ -15,7 +15,7 @@
    from the selected accent colour. */
 :root {
   --theme-accent: #915DFF;
-  --theme-background-image: url("images/UI/background.png");
+  --theme-background-image: url("images/UI/background_Darkcolor.png");
   --back-icon-image: url("images/UI/back-dark.png");
   --setup-icon-image: url("images/UI/setup-dark.png");
   --theme-cat-image: url("images/UI/background_cat.png");
@@ -40,7 +40,7 @@
 
 html[data-theme-mode="dark"] {
   color-scheme: dark;
-  --theme-background-image: url("images/UI/background.png");
+  --theme-background-image: url("images/UI/background_Darkcolor.png");
   --back-icon-image: url("images/UI/back-dark.png");
   --setup-icon-image: url("images/UI/setup-dark.png");
   --theme-bg: #00042B;
@@ -60,7 +60,7 @@ html[data-theme-mode="dark"] {
 
 html[data-theme-mode="light"] {
   color-scheme: light;
-  --theme-background-image: url("images/UI/background.png");
+  --theme-background-image: url("images/UI/background_Lightcolor.png");
   --back-icon-image: url("images/UI/back-dark.png");
   --setup-icon-image: url("images/UI/setup-dark.png");
   --theme-bg: #EBE8D9;
@@ -119,36 +119,6 @@ button, input, select, textarea {
 
 .hidden {
   display: none !important;
-}
-
-.loading-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 14px;
-  background: #e8bd6c;
-  color: #513414;
-  font-size: 1.05rem;
-}
-
-.loading-spinner {
-  width: 44px;
-  height: 44px;
-  border: 5px solid rgba(81, 52, 20, .22);
-  border-top-color: #7b4b18;
-  border-radius: 50%;
-  animation: loading-spin .8s linear infinite;
-}
-
-@keyframes loading-spin {
-  to { transform: rotate(1turn); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner { animation: none; }
 }
 
 body {
@@ -972,20 +942,14 @@ h2 {
   will-change: transform, opacity;
 }
 
-.cat-run-frame {
-  position: absolute;
-  inset: 0;
-  background: left top / auto 100% no-repeat url("images/UI/CatRun02.png");
-  animation: cat-run-bob 180ms ease-in-out infinite alternate;
+.cat-runner img {
+  position: relative;
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: none;
+  animation: cat-run-steps 560ms steps(8) infinite;
   image-rendering: pixelated;
-}
-
-.cat-runner.right .cat-run-frame {
-  --cat-run-direction: -1;
-}
-
-.cat-runner.left .cat-run-frame {
-  --cat-run-direction: 1;
 }
 
 @keyframes cat-run-away {
@@ -996,9 +960,8 @@ h2 {
   }
 }
 
-@keyframes cat-run-bob {
-  from { transform: scaleX(var(--cat-run-direction)) translateY(0) rotate(-2deg); }
-  to { transform: scaleX(var(--cat-run-direction)) translateY(-7%) rotate(2deg); }
+@keyframes cat-run-steps {
+  to { transform: translateX(-100%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2029,19 +1992,21 @@ html[data-theme-mode="dark"] .setting-toggle.off {
 /* Only the actual game board uses the reduced-decoration game background. */
 html[data-theme-mode="dark"] body[data-app-screen="game"] {
   --game-board-background-image: url("images/UI/background_Darkcolora.png");
+  --theme-background-image: var(--game-map-background-image, var(--game-board-background-image));
 }
 
 html[data-theme-mode="light"] body[data-app-screen="game"] {
   --game-board-background-image: url("images/UI/background_Darkcolora.png");
+  --theme-background-image: var(--game-map-background-image, var(--game-board-background-image));
 }
 
 /* Other pages always return to the normal decorative background. */
 html[data-theme-mode="dark"] body:not([data-app-screen="game"]) {
-  --theme-background-image: url("images/UI/background.png");
+  --theme-background-image: url("images/UI/background_Darkcolor.png");
 }
 
 html[data-theme-mode="light"] body:not([data-app-screen="game"]) {
-  --theme-background-image: url("images/UI/background.png");
+  --theme-background-image: url("images/UI/background_Lightcolor.png");
 }
 
 /* Other-page navigation icons: 34px -> 68px (2x). */
@@ -3210,7 +3175,7 @@ html[data-theme-mode="light"] #stage-buttons .stage-button.selected {
     0 1px 1px rgba(83,67,27,.18) !important;
 }
 
-/* v36: selection cleanup and global settings shortcuts. */
+/* v36: selection cleanup, global settings shortcuts, and exit buttons. */
 /* Stage selection now communicates state through the recessed 3D effect only. */
 #stage-buttons .stage-button.selected {
   outline: none !important;
@@ -3277,6 +3242,37 @@ html[data-theme-mode="light"] #size-buttons button.selected {
   grid-template-columns: 60px minmax(0, 1fr) 60px !important;
 }
 
+/* Exit actions follow the same 3D language as their surrounding page. */
+.settings-exit-button {
+  width: 100%;
+  min-height: 52px;
+  margin: 8px 0 24px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 82%, transparent);
+  border-radius: 14px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow:
+    inset 0 2px 1px color-mix(in srgb, white 20%, transparent),
+    inset 0 -2px 2px color-mix(in srgb, black 12%, transparent),
+    0 4px 0 color-mix(in srgb, var(--theme-shadow) 68%, transparent),
+    0 7px 11px color-mix(in srgb, var(--theme-shadow) 28%, transparent);
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, background 90ms ease-out;
+}
+
+.settings-exit-button:active {
+  transform: translateY(3px);
+  background: var(--theme-surface-2);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, black 18%, transparent),
+    inset 0 -1px 2px color-mix(in srgb, white 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--theme-shadow) 56%, transparent);
+}
+
 .settings-version {
   margin: -10px 0 24px;
   color: var(--theme-text-secondary);
@@ -3326,7 +3322,8 @@ html[data-theme-mode="dark"] #screen-settings {
 html[data-theme-mode="dark"] #screen-settings .settings-back-button,
 html[data-theme-mode="dark"] #screen-settings .theme-mode-button,
 html[data-theme-mode="dark"] #screen-settings .setting-toggle,
-html[data-theme-mode="dark"] #screen-settings .settings-link {
+html[data-theme-mode="dark"] #screen-settings .settings-link,
+html[data-theme-mode="dark"] #screen-settings .settings-exit-button {
   background: linear-gradient(180deg,
     var(--settings-button-top) 0%,
     var(--settings-button-mid) 56%,
@@ -3382,7 +3379,8 @@ html[data-theme-mode="dark"] #screen-settings .setting-toggle.off {
 html[data-theme-mode="dark"] #screen-settings .settings-back-button:active,
 html[data-theme-mode="dark"] #screen-settings .theme-mode-button:active,
 html[data-theme-mode="dark"] #screen-settings .setting-toggle:active,
-html[data-theme-mode="dark"] #screen-settings .settings-link:active {
+html[data-theme-mode="dark"] #screen-settings .settings-link:active,
+html[data-theme-mode="dark"] #screen-settings .settings-exit-button:active {
   transform: translateY(3px) !important;
   filter: brightness(.82) !important;
   box-shadow:
@@ -3499,6 +3497,217 @@ html[data-theme-mode="light"] #screen-settings .theme-mode-button[data-theme-mod
     0 1px 0 color-mix(in srgb, var(--theme-accent-strong) 62%, var(--theme-shadow)),
     0 2px 5px color-mix(in srgb, var(--theme-shadow) 18%, transparent) !important;
 }
+
+/* Music settings */
+.music-settings-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  column-gap: 8px;
+  row-gap: 12px;
+}
+
+.music-volume-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 36px 34px minmax(80px, 1fr) 34px 58px;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+}
+
+.music-track-row {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.music-track-options {
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-accent) var(--theme-surface);
+  border: 1px solid var(--theme-outline);
+  border-radius: 8px;
+  background: var(--theme-surface-2);
+  color: var(--theme-text-secondary);
+  font-size: 0.86rem;
+}
+
+.music-track-options::-webkit-scrollbar {
+  width: 9px;
+}
+
+.music-track-options::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: var(--theme-surface);
+}
+
+.music-track-options::-webkit-scrollbar-thumb {
+  border: 2px solid var(--theme-surface);
+  border-radius: 999px;
+  background: var(--theme-accent);
+}
+
+.music-track-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: calc(2.8em + 12px);
+  min-height: 46px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-text);
+  cursor: pointer;
+}
+
+.music-track-option.selected {
+  background: var(--theme-accent-soft);
+  color: var(--theme-accent-strong);
+  border-color: color-mix(in srgb, var(--theme-accent) 55%, transparent);
+}
+
+.music-track-radio {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--theme-accent);
+}
+
+.music-track-preview-button {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--theme-outline);
+  border-radius: 7px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.music-track-preview-button[aria-pressed="true"] {
+  background: var(--theme-accent);
+  color: var(--theme-on-accent);
+}
+
+.music-track-choice {
+  display: grid;
+  grid-template-columns: 2rem 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  cursor: pointer;
+}
+
+.music-track-choice span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.4;
+  max-height: 2.8em;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.music-track-heading {
+  display: grid;
+  grid-template-columns: 34px 2rem 76px minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 15px;
+  font-size: .75rem;
+  white-space: nowrap;
+}
+#music-selection-mode { grid-column: 1 / -1; padding: 8px; }
+.music-settings-item .hidden { display: none !important; }
+
+.music-volume-label {
+  color: var(--theme-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.music-volume-step,
+.music-volume-number {
+  border: 1px solid var(--theme-outline);
+  background: var(--theme-surface-2);
+  color: var(--theme-text);
+}
+
+.music-volume-step {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.music-volume-step:active {
+  background: var(--theme-active);
+}
+
+.music-volume-range {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--theme-accent);
+  cursor: pointer;
+}
+
+.music-volume-number {
+  width: 58px;
+  height: 36px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.music-volume-number:focus {
+  border-color: var(--theme-accent);
+  outline: 2px solid color-mix(in srgb, var(--theme-accent) 26%, transparent);
+  outline-offset: 1px;
+}
+
+html[data-theme-mode="dark"] .music-volume-step,
+html[data-theme-mode="dark"] .music-volume-number,
+html[data-theme-mode="dark"] .music-track-options {
+  background: color-mix(in srgb, var(--theme-surface-2) 86%, black 14%);
+}
+
+@media (max-width: 380px) {
+  .music-volume-row {
+    grid-template-columns: 32px 32px minmax(70px, 1fr) 32px 52px;
+    gap: 5px;
+  }
+
+  .music-volume-step {
+    width: 32px;
+    height: 32px;
+  }
+
+  .music-volume-number {
+    width: 52px;
+  }
+}
+
 
 /* v42: marker icon selector follows the theme-mode depth language.
    Selected/active = pressed down; unselected = raised. */
@@ -3813,6 +4022,21 @@ html[data-theme-mode="light"] #screen-reminder-icons .reminder-icon-card:not(.se
 @media (prefers-reduced-motion: reduce) {
   .detector-preview { animation: none; }
 }
+
+.board-upload-url {
+  margin: 10px 0 14px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 60%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--theme-bg) 82%, transparent);
+  color: var(--theme-text);
+  font-size: .82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 
 /* ── Random level share code ─────────────────────────────────────────────── */
 .share-code-box {
@@ -4342,7 +4566,9 @@ body[data-app-screen="small-map"] {
   padding-top: 0;
 }
 
+body[data-app-screen="world-map"]::before,
 body[data-app-screen="world-map"]::after,
+body[data-app-screen="small-map"]::before,
 body[data-app-screen="small-map"]::after,
 body[data-app-screen="world-map"] > .app-header,
 body[data-app-screen="small-map"] > .app-header {
@@ -4365,7 +4591,7 @@ body[data-app-screen="small-map"] #app {
   height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
-  background: transparent;
+  background: #0d2030;
 }
 
 .map-toolbar {
@@ -4440,7 +4666,7 @@ body[data-app-screen="small-map"] #app {
   overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  background: transparent;
+  background: #173b51;
 }
 
 .world-map-background,
@@ -4497,30 +4723,24 @@ body[data-app-screen="small-map"] #app {
   position: absolute;
   z-index: 20;
   top: 50%;
-  right: 8px;
+  right: 10px;
   display: grid;
-  gap: 6px;
+  gap: 8px;
   transform: translateY(-50%);
 }
 
 .world-map-dot {
-  width: 40px;
-  height: 40px;
-  padding: 0;
+  width: 9px;
+  height: 9px;
   border: 1px solid rgba(255, 255, 255, .9);
   border-radius: 50%;
   background: rgba(0, 0, 0, .34);
-  color: #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
-  font-size: 1rem;
-  line-height: 1;
-  touch-action: manipulation;
 }
 
 .world-map-dot.active {
   background: #fff2a8;
-  color: #342814;
-  transform: scale(1.08);
+  transform: scale(1.35);
 }
 
 .difficulty-picker {
@@ -4664,7 +4884,7 @@ body[data-app-screen="small-map"] #app {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: transparent;
+  background: #13263c;
 }
 
 .small-map-spots,
@@ -4932,7 +5152,7 @@ html[data-theme-mode="dark"] #screen-settings .settings-next-button:active {
   display: none !important;
 }
 
-#screen-settings[data-settings-page="2"] .settings-next-button {
+#screen-settings[data-settings-page="3"] .settings-next-button {
   visibility: hidden;
   pointer-events: none;
 }
@@ -4941,8 +5161,13 @@ html[data-theme-mode="dark"] #screen-settings .settings-next-button:active {
   margin-top: 0;
 }
 
-#settings-page-2 .settings-list {
+#settings-page-2 .settings-list,
+#settings-page-3 .settings-list {
   margin-top: 4px;
+}
+
+#settings-page-3 .settings-exit-button {
+  margin-top: 18px;
 }
 
 @media (max-width: 400px) {
@@ -5046,13 +5271,6 @@ body[data-app-screen="game"] .board::before {
   border-radius: calc(var(--board-radius, 12px) + 5px);
   background: center / cover no-repeat var(--game-board-background-image);
   pointer-events: none;
-}
-
-body[data-app-screen="game"]::after {
-  inset: 0;
-  width: auto;
-  aspect-ratio: auto;
-  background: center / contain no-repeat var(--game-map-background-image);
 }
 
 /* v54: compact gameplay header and simplified maps. */
@@ -5169,68 +5387,6 @@ body[data-app-screen="game"] #board {
   color: #fff;
   font-size: .82rem;
   line-height: 1;
-}
-
-/* Keep the full game UI inside the visible viewport, including 720p screens. */
-body[data-app-screen="game"] {
-  overflow: hidden;
-}
-
-body[data-app-screen="game"] #app {
-  height: calc(100dvh - env(safe-area-inset-top, 0px));
-  padding: 6px 16px max(6px, env(safe-area-inset-bottom, 0px));
-  overflow: hidden;
-}
-
-#screen-game {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  flex-direction: column;
-}
-
-#screen-game .game-nav-row {
-  margin-bottom: 4px;
-}
-
-#screen-game .game-nav-row .icon-button {
-  width: 56px !important;
-  height: 56px !important;
-}
-
-#screen-game .game-nav-row .theme-nav-icon {
-  width: 52px !important;
-  height: 52px !important;
-}
-
-#screen-game .game-nav-center {
-  height: 56px;
-}
-
-#screen-game .game-toolbar.tool-row {
-  margin: 4px 0;
-}
-
-#screen-game .game-toolbar.tool-row button {
-  padding-block: 7px;
-}
-
-body[data-app-screen="game"] #board {
-  width: min(100%, calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
-  margin: 8px auto 0;
-}
-
-#screen-game .game-bottom-actions {
-  margin: 8px 0 0;
-}
-
-#screen-game .game-bottom-action {
-  min-height: 56px;
-  flex-basis: 56px;
-}
-
-#screen-game .game-bottom-action img {
-  height: 56px;
 }
 
 /* ── v2 level book and illustrated home menu ─────────────────────────── */

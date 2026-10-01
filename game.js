@@ -76,6 +76,11 @@ const settings = (() => {
   try {
     const s = JSON.parse(localStorage.getItem("meowdoku_settings") || "{}");
     return {
+      music: s.music !== false,
+      musicVolume: Number.isFinite(Number(s.musicVolume)) ? Math.max(0, Math.min(100, Math.round(Number(s.musicVolume)))) : 50,
+      musicTrack: typeof s.musicTrack === "string" ? s.musicTrack : "",
+      musicLoopAll: !!s.musicLoopAll,
+      musicFreeChoice: !!s.musicFreeChoice,
       soundEffects: s.soundEffects !== false,
       vibrate: s.vibrate !== false,
       markDimming: s.markDimming !== false,
@@ -90,6 +95,10 @@ const settings = (() => {
     };
   } catch {
     return {
+      music: true,
+      musicVolume: 50,
+      musicTrack: "",
+      musicLoopAll: false,
       soundEffects: true,
       vibrate: true,
       markDimming: true,
@@ -448,7 +457,6 @@ const el = {
   cellStyleButtons: document.getElementById("cell-style-buttons"),
   cellStyleCurrentName: document.getElementById("cell-style-current-name"),
   screenEntry: document.getElementById("screen-entry"),
-  loadingOverlay: document.getElementById("loading-overlay"),
   screenHome: document.getElementById("screen-home"),
   screenLevelModes: document.getElementById("screen-level-modes"),
   screenWorldMap: document.getElementById("screen-world-map"),
@@ -460,7 +468,6 @@ const el = {
   screenHistory: document.getElementById("screen-history"),
   screenHistoryRandom: document.getElementById("screen-history-random"),
   screenGame: document.getElementById("screen-game"),
-  gameMapBackgroundPreload: document.getElementById("game-map-background-preload"),
   screenSettings: document.getElementById("screen-settings"),
   screenReminderIcons: document.getElementById("screen-reminder-icons"),
   screenBlockColors: document.getElementById("screen-block-colors"),
@@ -472,6 +479,8 @@ const el = {
   btnHomeHistory: document.getElementById("btn-home-history"),
   btnHistoryRandomDetails: document.getElementById("btn-history-random-details"),
   btnHomeSettings: document.getElementById("btn-home-settings"),
+  btnHomeExit: document.getElementById("btn-home-exit"),
+  btnSettingsExit: document.getElementById("btn-settings-exit"),
   pageSettingsButtons: [...document.querySelectorAll(".page-settings-button")],
   btnLevelModesBack: document.getElementById("btn-level-modes-back"),
   btnWorldBack: document.getElementById("btn-world-back"),
@@ -518,6 +527,7 @@ const el = {
   statusBanner: document.getElementById("status-banner"),
   gameBottomActions: document.getElementById("game-bottom-actions"),
   btnSaveProgress: document.getElementById("btn-save-progress"),
+  btnUploadBoard: document.getElementById("btn-upload-board"),
   btnBackpack: document.getElementById("btn-backpack"),
   backpackModal: document.getElementById("backpack-modal"),
   backpackTitle: document.getElementById("backpack-title"),
@@ -542,6 +552,11 @@ const el = {
   saveProgressModal: document.getElementById("save-progress-modal"),
   btnSaveProgressNo: document.getElementById("btn-save-progress-no"),
   btnSaveProgressYes: document.getElementById("btn-save-progress-yes"),
+  boardUploadModal: document.getElementById("board-upload-modal"),
+  boardUploadStatus: document.getElementById("board-upload-status"),
+  boardUploadUrl: document.getElementById("board-upload-url"),
+  btnCopyUploadUrl: document.getElementById("btn-copy-upload-url"),
+  btnCloseUploadModal: document.getElementById("btn-close-upload-modal"),
   btnBack: document.getElementById("btn-back"),
   btnSettings: document.getElementById("btn-settings"),
   btnSettingsBack: document.getElementById("btn-settings-back"),
@@ -556,8 +571,16 @@ const el = {
   helpModal: document.getElementById("help-modal"),
   btnHelp: document.getElementById("btn-help"),
   btnHelpClose: document.getElementById("btn-help-close"),
+  btnToggleMusic: document.getElementById("btn-toggle-music"),
+  musicStateIcon: document.getElementById("music-state-icon"),
+  btnMusicLoopMode: document.getElementById("btn-music-loop-mode"),
+  musicLoopModeIcon: document.getElementById("music-loop-mode-icon"),
   btnToggleSoundEffects: document.getElementById("btn-toggle-sound-effects"),
   soundEffectsStateIcon: document.getElementById("sound-effects-state-icon"),
+  musicVolumeRange: document.getElementById("music-volume-range"),
+  musicVolumeNumber: document.getElementById("music-volume-number"),
+  musicVolumeStepButtons: [...document.querySelectorAll(".music-volume-step")],
+  musicTrackOptions: document.getElementById("music-track-options"),
   btnToggleVibrate: document.getElementById("btn-toggle-vibrate"),
   vibrateStateIcon: document.getElementById("vibrate-state-icon"),
   btnToggleMarkDimming: document.getElementById("btn-toggle-mark-dimming"),
@@ -732,39 +755,188 @@ function renderRandomHistoryDetails() {
 
 globalThis.renderGameHistory = renderGameHistory;
 
+const musicManager = globalThis.MusicManager ? new globalThis.MusicManager() : null;
+musicManager?.configure({ enabled: settings.music, volume: settings.musicVolume, loopAll: settings.musicLoopAll });
 const soundManager = globalThis.SoundManager ? new globalThis.SoundManager() : null;
 soundManager?.configure({ enabled: settings.soundEffects });
+let musicPreviewTrack = null;
 
-let screenLoadToken = 0;
-
-function startScreenLoading() {
-  const token = ++screenLoadToken;
-  el.loadingOverlay?.classList.remove("hidden");
-  document.body.setAttribute("aria-busy", "true");
-  return token;
-}
-
-async function waitForImages(root) {
-  const images = [...root.querySelectorAll("img[src]")];
-  await Promise.all(images.map((image) => image.complete ? Promise.resolve() : new Promise((resolve) => {
-    image.addEventListener("load", resolve, { once: true });
-    image.addEventListener("error", resolve, { once: true });
-  })));
-  await Promise.all(images.map((image) => image.decode?.().catch(() => {}) || Promise.resolve()));
-}
-
-function finishScreenLoading(root, token) {
-  waitForImages(root).finally(() => {
-    if (token !== screenLoadToken) return;
-    el.loadingOverlay?.classList.add("hidden");
-    document.body.removeAttribute("aria-busy");
+function syncMusicPreviewUI() {
+  el.musicTrackOptions?.querySelectorAll(".music-track-preview-button").forEach((button) => {
+    const playing = button.dataset.previewSrc === musicPreviewTrack;
+    button.textContent = playing ? "■" : "▶";
+    button.setAttribute("aria-pressed", String(playing));
+    button.setAttribute("aria-label", `${playing ? "停止" : "播放"} ${button.dataset.trackName}`);
   });
+}
+
+function syncMusicTrackListHeight() {
+  if (!el.musicTrackOptions || document.body.dataset.appScreen !== "settings") return;
+  const top = el.musicTrackOptions.getBoundingClientRect().top;
+  const catVisibleHeight = Math.min(window.innerWidth * 0.3856, 253.7);
+  el.musicTrackOptions.style.maxHeight = `${Math.max(0, Math.floor(window.innerHeight - catVisibleHeight - 3 - top))}px`;
+}
+
+globalThis.syncMusicTrackListHeight = syncMusicTrackListHeight;
+window.addEventListener("resize", syncMusicTrackListHeight);
+
+musicManager?.setPreviewStateListener((track) => {
+  musicPreviewTrack = track;
+  syncMusicPreviewUI();
+});
+
+function clampMusicVolume(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return settings.musicVolume;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function syncMusicVolumeUI() {
+  const value = clampMusicVolume(settings.musicVolume);
+  settings.musicVolume = value;
+  if (el.musicVolumeRange) el.musicVolumeRange.value = String(value);
+  if (el.musicVolumeNumber) el.musicVolumeNumber.value = String(value);
+}
+
+function applyMusicVolume(value, persist = true) {
+  settings.musicVolume = clampMusicVolume(value);
+  syncMusicVolumeUI();
+  musicManager?.setVolume(settings.musicVolume);
+  if (persist) saveSettings();
+}
+
+function loadMusicTracks() {
+  try {
+    const tracks = JSON.parse(globalThis.MeowdokuAndroid?.getBgmTracks?.() || "[]");
+    return Array.isArray(tracks) ? tracks : [];
+  } catch {
+    return [];
+  }
+}
+
+function selectMusicTrack(track, persist = true) {
+  if (persist && !isMusicSelectionUnlocked()) return;
+  settings.musicTrack = track;
+  el.musicTrackOptions?.querySelectorAll(".music-track-option").forEach((label) => {
+    const radio = label.querySelector(".music-track-radio");
+    const selected = radio?.dataset.track === track;
+    if (radio) radio.checked = selected;
+    label.classList.toggle("selected", selected);
+  });
+  applyMusicSelection();
+  if (persist && musicManager?.mode === "game") musicManager.playGame();
+  if (persist) saveSettings();
+}
+
+function musicTrackInfo(track) {
+  const match = /^(?:(6|7|8|9|10|11|12)x\1-([12])|R-(1))\s+(.+)\.mp3$/i.exec(track);
+  if (!match) return null;
+  return { key: match[3] ? "R-1" : `${match[1]}x${match[1]}-${match[2]}`,
+    difficulty: match[3] ? "隨機關卡" : `${match[1]}x${match[1]} ${match[2] === "1" ? "普通" : "高難"}`,
+    title: match[4], order: match[3] ? 99 : Number(match[1]) * 2 + Number(match[2]) };
+}
+
+function isMusicSelectionUnlocked() {
+  return state.fixedLevelsReady && isV2WormholeUnlocked();
+}
+
+function applyMusicSelection() {
+  const free = isMusicSelectionUnlocked() && settings.musicFreeChoice;
+  const tracks = loadMusicTracks().filter((track) => musicTrackInfo(track));
+  const key = state.mode === "random" ? "R-1" : `${state.n}x${state.n}-${state.mode === "hard" ? 2 : 1}`;
+  const track = free && tracks.includes(settings.musicTrack) ? settings.musicTrack
+    : tracks.find((name) => musicTrackInfo(name).key === key);
+  musicManager?.setLoopAll(!!(free && settings.musicLoopAll));
+  musicManager?.setTrack(track ? `./bgm/${encodeURIComponent(track)}` : "", document.body.dataset.appScreen !== "game");
+}
+
+function syncMusicAccessUI() {
+  const unlocked = isMusicSelectionUnlocked();
+  document.querySelectorAll(".music-volume-row, .music-track-row, #btn-music-loop-mode, #music-selection-mode").forEach((node) => {
+    node.classList.toggle("hidden", !unlocked);
+  });
+  const mode = document.getElementById("music-selection-mode");
+  if (mode) mode.value = settings.musicFreeChoice ? "free" : "stage";
+  if (el.btnMusicLoopMode) el.btnMusicLoopMode.disabled = !unlocked;
+}
+
+function syncMusicTrackUI() {
+  if (!el.musicTrackOptions) return;
+
+  const tracks = loadMusicTracks().filter((track) => musicTrackInfo(track))
+    .sort((a, b) => musicTrackInfo(a).order - musicTrackInfo(b).order);
+  musicManager?.setPlaylist(tracks.map((track) => `./bgm/${encodeURIComponent(track)}`));
+  el.musicTrackOptions.replaceChildren();
+  tracks.forEach((track) => {
+    const option = document.createElement("div");
+    option.className = "music-track-option";
+    const info = musicTrackInfo(track);
+    const displayName = info.title;
+    const previewSrc = `./bgm/${encodeURIComponent(track)}`;
+    const previewButton = document.createElement("button");
+    previewButton.type = "button";
+    previewButton.className = "music-track-preview-button";
+    previewButton.dataset.previewSrc = previewSrc;
+    previewButton.dataset.trackName = displayName;
+    previewButton.textContent = "▶";
+    previewButton.setAttribute("aria-label", `播放 ${displayName}`);
+    previewButton.setAttribute("aria-pressed", "false");
+    previewButton.addEventListener("click", () => {
+      if (isMusicSelectionUnlocked()) musicManager?.togglePreview(previewSrc);
+    });
+    const label = document.createElement("label");
+    label.className = "music-track-choice";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "music-track";
+    radio.className = "music-track-radio";
+    radio.dataset.track = track;
+    radio.setAttribute("aria-label", `${info.difficulty} ${displayName}`);
+    radio.addEventListener("change", () => {
+      if (radio.checked && isMusicSelectionUnlocked()) {
+        settings.musicFreeChoice = true;
+        selectMusicTrack(track);
+        syncMusicAccessUI();
+      }
+    });
+    const name = document.createElement("span");
+    name.textContent = displayName;
+    const difficulty = document.createElement("span");
+    difficulty.textContent = info.difficulty;
+    label.append(radio, difficulty, name);
+    option.append(previewButton, label);
+    el.musicTrackOptions.appendChild(option);
+  });
+
+  const previous = settings.musicTrack;
+  const selected = tracks.includes(previous) ? previous : (tracks[0] || "");
+  if (tracks.length === 0) el.musicTrackOptions.textContent = "沒有可用音樂";
+  selectMusicTrack(selected, previous !== selected);
+  syncMusicPreviewUI();
+  syncMusicAccessUI();
+  syncMusicTrackListHeight();
+}
+
+function syncMusicForScreen(screen) {
+  if (!musicManager) return;
+  if (screen === "game") {
+    applyMusicSelection();
+    musicManager.playGame();
+  }
+  else if (screen === "settings") syncMusicAccessUI();
+  else if (!["settings", "reminder-icons", "block-colors"].includes(screen)) musicManager.stopWithFade();
 }
 
 // ── Haptic ───────────────────────────────────────────────────────────────────
 
-function vibrate(_type, fallbackMs = 50) {
+function vibrate(type, fallbackMs = 50) {
   if (!settings.vibrate) return;
+  try {
+    if (globalThis.MeowdokuAndroid?.performHaptic) {
+      const handled = globalThis.MeowdokuAndroid.performHaptic(type, fallbackMs);
+      if (handled === true) return;
+    }
+  } catch { }
   if (navigator.vibrate) navigator.vibrate(fallbackMs);
 }
 
@@ -772,16 +944,22 @@ function vibrate(_type, fallbackMs = 50) {
 let cellEls = [];
 
 function updateToggleUI() {
+  if (el.musicStateIcon) el.musicStateIcon.textContent = settings.music ? "🎵" : "🔇";
+  if (el.musicLoopModeIcon) el.musicLoopModeIcon.textContent = settings.musicLoopAll ? "∞" : "1";
   if (el.soundEffectsStateIcon) el.soundEffectsStateIcon.textContent = settings.soundEffects ? "🔊" : "🔇";
   if (el.vibrateStateIcon) el.vibrateStateIcon.textContent = settings.vibrate ? "📳" : "📴";
   if (el.markDimmingStateIcon) el.markDimmingStateIcon.textContent = settings.markDimming ? "🌗" : "☀️";
   document.documentElement.dataset.markDimming = settings.markDimming ? "on" : "off";
+  el.btnToggleMusic?.classList.toggle("off", !settings.music);
   el.btnToggleSoundEffects?.classList.toggle("off", !settings.soundEffects);
   el.btnToggleVibrate.classList.toggle("off", !settings.vibrate);
   el.btnToggleMarkDimming?.classList.toggle("off", !settings.markDimming);
   el.btnToggleAuto.classList.toggle("off", !settings.autoElim);
   el.btnToggleHypo?.classList.toggle("off", !settings.hypo);
+  el.btnToggleMusic?.setAttribute("aria-pressed", String(settings.music));
   el.btnToggleSoundEffects?.setAttribute("aria-pressed", String(settings.soundEffects));
+  el.btnMusicLoopMode?.setAttribute("aria-pressed", String(settings.musicLoopAll));
+  el.btnMusicLoopMode?.setAttribute("aria-label", settings.musicLoopAll ? "全部曲目循環播放" : "單曲循環播放");
   el.btnToggleVibrate.setAttribute("aria-pressed", String(settings.vibrate));
   el.btnToggleMarkDimming?.setAttribute("aria-pressed", String(settings.markDimming));
   el.btnToggleAuto.setAttribute("aria-pressed", String(settings.autoElim));
@@ -836,6 +1014,9 @@ function applyAppTheme(mode = settings.themeMode, accent = settings.themeAccent)
     btn.classList.toggle("selected", selected);
     btn.setAttribute("aria-pressed", String(selected));
   });
+
+  const background = settings.themeMode === "light" ? "#EBE8D9" : "#00042B";
+  try { globalThis.MeowdokuAndroid?.applyTheme(settings.themeMode, background); } catch { }
 }
 
 function applyRegionColors(colors = settings.regionColors) {
@@ -935,6 +1116,25 @@ function renderBlockColorEditor() {
     card.append(swatch, meta);
     el.blockColorGrid.appendChild(card);
   });
+}
+
+function exitGame() {
+  stopGameplayTimer();
+  musicManager?.stop();
+  // Native WebView exit only. Never navigate away from the game page: doing so
+  // can replace the main frame with an error/blank document before Android exits.
+  try {
+    if (globalThis.MeowdokuAndroid) {
+      globalThis.MeowdokuAndroid.exitApp();
+    }
+  } catch { }
+
+  // WebChromeClient catches this prompt token synchronously and closes the Activity.
+  // The short delay is a fallback for WebViews where the JavascriptInterface call
+  // exists but is not dispatched correctly. No URL/navigation fallback is used.
+  setTimeout(() => {
+    try { window.prompt("__MEOWDOKU_EXIT__", ""); } catch { }
+  }, 80);
 }
 
 let itemInteraction = null;
@@ -1149,8 +1349,8 @@ function openSaveProgressConfirm() {
   const message = el.saveProgressModal?.querySelector(".modal-message");
   if (message) {
     message.innerHTML = state.mode === "random"
-      ? `紀錄目前的遊戲進度後將返回首頁。<br>下次進入 ${state.n} × ${state.n} 隨機關卡時，將從這次盤面與時間繼續。<br><br>是否要紀錄目前進度？`
-      : "紀錄目前的遊戲進度後將返回首頁。<br>下次進入同一關卡時，將從這次紀錄繼續。<br><br>是否要紀錄目前進度？";
+      ? `紀錄目前的遊戲進度後將離開遊戲。<br>下次進入 ${state.n} × ${state.n} 隨機關卡時，將從這次盤面與時間繼續。<br><br>是否要紀錄目前進度？`
+      : "紀錄目前的遊戲進度後將離開遊戲。<br>下次進入同一關卡時，將從這次紀錄繼續。<br><br>是否要紀錄目前進度？";
   }
   el.saveProgressModal?.classList.remove("hidden");
 }
@@ -1167,7 +1367,80 @@ function confirmSaveProgress() {
     return;
   }
   closeSaveProgressConfirm();
-  showAppScreen("home");
+  exitGame();
+}
+
+let boardUploadUrl = "";
+
+function setBoardUploadState(message, url = "", finished = false) {
+  if (el.boardUploadStatus) el.boardUploadStatus.textContent = message;
+  boardUploadUrl = url || "";
+  if (el.boardUploadUrl) {
+    el.boardUploadUrl.textContent = boardUploadUrl;
+    el.boardUploadUrl.classList.toggle("hidden", !boardUploadUrl);
+  }
+  el.btnCopyUploadUrl?.classList.toggle("hidden", !boardUploadUrl);
+  el.btnCloseUploadModal?.classList.toggle("hidden", !finished);
+}
+
+function startBoardUpload() {
+  closeBackpack();
+  if (!el.board || !globalThis.MeowdokuAndroid?.captureAndUploadBoard) {
+    el.boardUploadModal?.classList.remove("hidden");
+    setBoardUploadState("此版本不支援盤面上傳。", "", true);
+    return;
+  }
+
+  const rect = el.board.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return;
+
+  el.btnUploadBoard.disabled = true;
+  el.btnUploadBoard.setAttribute("aria-label", "上傳中…");
+  boardUploadUrl = "";
+
+  try {
+    globalThis.MeowdokuAndroid.captureAndUploadBoard(
+      rect.left, rect.top, rect.width, rect.height,
+      window.innerWidth || document.documentElement.clientWidth,
+      window.innerHeight || document.documentElement.clientHeight
+    );
+  } catch (error) {
+    console.error(error);
+    el.btnUploadBoard.disabled = false;
+    el.btnUploadBoard.setAttribute("aria-label", "上傳盤面");
+    el.boardUploadModal?.classList.remove("hidden");
+    setBoardUploadState("盤面上傳失敗。", "", true);
+  }
+}
+
+globalThis.meowdokuBoardUploadResult = function(success, payload) {
+  if (el.btnUploadBoard) {
+    el.btnUploadBoard.disabled = false;
+    el.btnUploadBoard.setAttribute("aria-label", "上傳盤面");
+  }
+  el.boardUploadModal?.classList.remove("hidden");
+  const text = String(payload || "").trim();
+  if (success && /^https:\/\/imgdb\.io\/i\//i.test(text)) {
+    setBoardUploadState("盤面上傳完成", text, true);
+  } else {
+    setBoardUploadState(text ? `盤面上傳失敗：${text}` : "盤面上傳失敗，請確認網路連線。", "", true);
+  }
+};
+
+function copyBoardUploadUrl() {
+  if (!boardUploadUrl) return;
+  try {
+    if (globalThis.MeowdokuAndroid?.copyText) {
+      globalThis.MeowdokuAndroid.copyText(boardUploadUrl);
+      if (el.btnCopyUploadUrl) el.btnCopyUploadUrl.textContent = "已複製";
+      setTimeout(() => { if (el.btnCopyUploadUrl) el.btnCopyUploadUrl.textContent = "複製網址"; }, 1200);
+      return;
+    }
+  } catch { }
+  navigator.clipboard?.writeText(boardUploadUrl).then(() => {
+    if (el.btnCopyUploadUrl) el.btnCopyUploadUrl.textContent = "已複製";
+    setTimeout(() => { if (el.btnCopyUploadUrl) el.btnCopyUploadUrl.textContent = "複製網址"; }, 1200);
+  }).catch(() => { });
 }
 
 function v2LocalLevel(location, stage) {
@@ -1375,21 +1648,6 @@ function syncWorldMapAssets() {
   });
 }
 
-function selectWorldMapPage(page, behavior = "smooth") {
-  const pageCount = V2_MAP_DATA?.worldPages?.length || 1;
-  state.worldPage = Math.max(0, Math.min(pageCount - 1, Number(page) || 0));
-  syncWorldMapIndicator();
-  syncWorldMapAssets();
-  const height = el.worldMapPager?.clientHeight || 0;
-  if (height > 0) {
-    el.worldMapPager.scrollTo({
-      top: invertWorldPage(state.worldPage, pageCount) * height,
-      behavior,
-    });
-  }
-  if (history.state?.screen === "world-map") history.replaceState(v2HistoryState("world-map"), "");
-}
-
 function renderWorldMap() {
   if (!V2_MAP_DATA || !el.worldMapPager || !el.worldMapIndicator) return;
   el.worldMapPager.innerHTML = "";
@@ -1438,23 +1696,20 @@ function renderWorldMap() {
     });
     el.worldMapPager.appendChild(section);
 
-    const dot = document.createElement("button");
-    dot.type = "button";
+    const dot = document.createElement("span");
     dot.className = "world-map-dot";
     dot.dataset.page = String(pageIndex);
-    dot.textContent = String(pageIndex + 1);
-    dot.setAttribute("aria-label", `切換到世界地圖 ${pageIndex + 1}`);
-    dot.addEventListener("click", () => {
-      const loadingToken = startScreenLoading();
-      selectWorldMapPage(pageIndex);
-      finishScreenLoading(el.screenWorldMap, loadingToken);
-    });
     el.worldMapIndicator.appendChild(dot);
   });
 
   syncWorldMapIndicator();
   syncWorldMapAssets();
-  requestAnimationFrame(() => selectWorldMapPage(state.worldPage, "auto"));
+  requestAnimationFrame(() => {
+    const height = el.worldMapPager.clientHeight;
+    if (height > 0) {
+      el.worldMapPager.scrollTop = invertWorldPage(state.worldPage, V2_MAP_DATA.worldPages.length) * height;
+    }
+  });
 }
 
 function closeDifficultyPicker() {
@@ -1464,7 +1719,6 @@ function closeDifficultyPicker() {
 
 function showDifficultyPicker(size, pushHistory = true) {
   if (!V2_MAP_DATA || !Number.isInteger(size)) return;
-  const loadingToken = startScreenLoading();
   state.worldChoiceSize = size;
   if (el.difficultyPickerTitle) el.difficultyPickerTitle.textContent = `${size}×${size} 選擇難度`;
   if (el.difficultyOptions) {
@@ -1497,7 +1751,6 @@ function showDifficultyPicker(size, pushHistory = true) {
   }
   el.difficultyPicker?.classList.remove("hidden");
   if (pushHistory) history.pushState(v2HistoryState("world-map"), "");
-  finishScreenLoading(el.difficultyPicker, loadingToken);
 }
 
 function openV2SmallMap(size, difficulty) {
@@ -2012,6 +2265,8 @@ async function init() {
   // Bind all event listeners synchronously BEFORE any async operations so that
   // browser caching of an older JS file can never leave buttons unresponsive.
   updateToggleUI();
+  syncMusicVolumeUI();
+  syncMusicTrackUI();
   applyCellStyle(settings.cellStyle);
   applyReminderIconChoice(settings.reminderIcon);
   applyAppTheme();
@@ -2019,6 +2274,11 @@ async function init() {
   renderBlockColorEditor();
   document.body.dataset.appScreen = "entry";
   try { history.replaceState({ screen: "entry" }, ""); } catch { }
+  syncMusicForScreen("entry");
+
+  const retryMusicAfterGesture = () => musicManager?.retryPlayback();
+  document.addEventListener("click", retryMusicAfterGesture, { once: true });
+  document.addEventListener("keydown", retryMusicAfterGesture, { once: true });
   document.addEventListener("click", (event) => {
     if (document.body.dataset.appScreen === "game") return;
     const button = event.target instanceof Element ? event.target.closest("button") : null;
@@ -2035,6 +2295,8 @@ async function init() {
   el.btnHomeHistory?.addEventListener("click", () => showAppScreen("history"));
   el.btnHistoryRandomDetails?.addEventListener("click", () => showAppScreen("history-random"));
   el.btnHomeSettings?.addEventListener("click", showSettingsScreen);
+  el.btnHomeExit?.addEventListener("click", exitGame);
+  el.btnSettingsExit?.addEventListener("click", exitGame);
   el.pageSettingsButtons.forEach((btn) => btn.addEventListener("click", showSettingsScreen));
   el.btnLevelModesBack?.addEventListener("click", () => history.back());
   el.btnWorldBack?.addEventListener("click", () => history.back());
@@ -2136,6 +2398,9 @@ async function init() {
   el.saveProgressModal?.addEventListener("click", (event) => {
     if (event.target === el.saveProgressModal) closeSaveProgressConfirm();
   });
+  el.btnUploadBoard?.addEventListener("click", startBoardUpload);
+  el.btnCopyUploadUrl?.addEventListener("click", copyBoardUploadUrl);
+  el.btnCloseUploadModal?.addEventListener("click", () => el.boardUploadModal?.classList.add("hidden"));
   el.btnNextLevel?.addEventListener("click", () => {
     el.winModal.classList.add("hidden");
     if (state.mode === "random") startRandomLevel(state.n);
@@ -2181,11 +2446,100 @@ async function init() {
     showAppScreen(target, false);
   });
 
+  el.btnToggleMusic?.addEventListener("click", () => {
+    settings.music = !settings.music;
+    saveSettings();
+    musicManager?.setEnabled(settings.music);
+    updateToggleUI();
+  });
+  el.btnMusicLoopMode?.addEventListener("click", () => {
+    if (!isMusicSelectionUnlocked()) return;
+    settings.musicFreeChoice = true;
+    settings.musicLoopAll = !settings.musicLoopAll;
+    saveSettings();
+    applyMusicSelection();
+    if (musicManager?.mode === "game") musicManager.playGame();
+    syncMusicAccessUI();
+    updateToggleUI();
+  });
+  document.getElementById("music-selection-mode")?.addEventListener("change", (event) => {
+    if (!isMusicSelectionUnlocked()) return;
+    settings.musicFreeChoice = event.target.value === "free";
+    if (!settings.musicFreeChoice) settings.musicLoopAll = false;
+    saveSettings();
+    applyMusicSelection();
+    syncMusicAccessUI();
+    updateToggleUI();
+  });
   el.btnToggleSoundEffects?.addEventListener("click", () => {
     settings.soundEffects = !settings.soundEffects;
     saveSettings();
     soundManager?.setEnabled(settings.soundEffects);
     updateToggleUI();
+  });
+
+  el.musicVolumeRange?.addEventListener("input", () => {
+    applyMusicVolume(el.musicVolumeRange.value);
+  });
+  el.musicVolumeNumber?.addEventListener("input", () => {
+    if (el.musicVolumeNumber.value === "") return;
+    applyMusicVolume(el.musicVolumeNumber.value);
+  });
+  el.musicVolumeNumber?.addEventListener("change", () => {
+    applyMusicVolume(el.musicVolumeNumber.value);
+  });
+  const stepMusicVolume = (button) => {
+    const delta = Number.parseInt(button.dataset.delta || "0", 10);
+    if (!Number.isFinite(delta)) return;
+    applyMusicVolume(settings.musicVolume + delta);
+  };
+
+  let musicHoldDelayTimer = null;
+  let musicHoldRepeatTimer = null;
+  let musicHoldButton = null;
+  let musicHoldRepeatCount = 0;
+
+  const stopMusicStepHold = () => {
+    if (musicHoldDelayTimer !== null) clearTimeout(musicHoldDelayTimer);
+    if (musicHoldRepeatTimer !== null) clearTimeout(musicHoldRepeatTimer);
+    musicHoldDelayTimer = null;
+    musicHoldRepeatTimer = null;
+    musicHoldButton = null;
+    musicHoldRepeatCount = 0;
+  };
+
+  const repeatMusicStep = () => {
+    if (!musicHoldButton) return;
+    stepMusicVolume(musicHoldButton);
+    musicHoldRepeatCount += 1;
+    musicHoldRepeatTimer = setTimeout(repeatMusicStep, musicHoldRepeatCount >= 10 ? 45 : 90);
+  };
+
+  el.musicVolumeStepButtons.forEach((button) => {
+    button.addEventListener("pointerdown", (event) => {
+      if (event.button !== undefined && event.button !== 0) return;
+      event.preventDefault();
+      stopMusicStepHold();
+      button.dataset.pointerHandled = "1";
+      musicHoldButton = button;
+      stepMusicVolume(button);
+      musicHoldDelayTimer = setTimeout(() => {
+        musicHoldDelayTimer = null;
+        repeatMusicStep();
+      }, 350);
+    });
+    button.addEventListener("pointerup", stopMusicStepHold);
+    button.addEventListener("pointercancel", stopMusicStepHold);
+    button.addEventListener("pointerleave", stopMusicStepHold);
+    button.addEventListener("contextmenu", (event) => event.preventDefault());
+    button.addEventListener("click", (event) => {
+      if (button.dataset.pointerHandled === "1") {
+        event.preventDefault();
+        delete button.dataset.pointerHandled;
+        return;
+      }
+      stepMusicVolume(button);
+    });
   });
 
   el.btnToggleVibrate?.addEventListener("click", () => {
@@ -2333,15 +2687,18 @@ async function init() {
   window.addEventListener("pointercancel", stopRgbStepHold);
   window.addEventListener("blur", () => {
     stopRgbStepHold();
+    stopMusicStepHold();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) closeBackpack();
     if (document.hidden) {
       stopRgbStepHold();
+      stopMusicStepHold();
       stopGameplayTimer();
     } else if (!el.screenGame?.classList.contains("hidden")) {
       startGameplayTimer();
     }
+    musicManager?.handleVisibilityChange(document.hidden);
   });
   window.addEventListener("pagehide", stopGameplayTimer);
 
@@ -2387,7 +2744,6 @@ async function init() {
     : DEFAULT_HARD_LEVEL_COUNT;
   renderSizeButtons();
   renderRandomSizeButtons();
-  finishScreenLoading(document, screenLoadToken);
 }
 
 function renderRandomSizeButtons() {
@@ -2654,7 +3010,7 @@ function refreshDoneMarks() {
 async function startLevel(n, idx, fromMap = false) {
   state.launchedFromMap = !!fromMap;
   state.stageStart = Math.floor((idx - 1) / 100) * 100 + 1;
-  const path = `levels/normal/${n}x${n}/level_${n}_${String(idx).padStart(8, "0")}.txt`;
+  const path = `/levels/normal/${n}x${n}/level_${n}_${String(idx).padStart(8, "0")}.txt`;
   const res = await fetch(path);
   if (!res.ok) throw new Error(`關卡讀取失敗：${res.status}`);
   const text = await res.text();
@@ -2680,7 +3036,7 @@ async function startHardLevel(idx, fromMap = false) {
 
   const boardSize = 6 + Math.floor((idx - 1) / 100);
   const localLevel = ((idx - 1) % 100) + 1;
-  const path = `levels/hard/${boardSize}x${boardSize}/level_${boardSize}_${String(localLevel).padStart(8, "0")}.txt`;
+  const path = `/levels/hard/${boardSize}x${boardSize}/level_${boardSize}_${String(localLevel).padStart(8, "0")}.txt`;
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`高難關卡 ${idx} 讀取失敗：HTTP ${res.status}`);
 
@@ -2708,7 +3064,7 @@ async function startExtraLevel(size, difficulty, idx) {
 
   state.launchedFromMap = false;
   state.stageStart = null;
-  const path = `levels/extra/${difficulty}/${size}x${size}/level_${size}_${String(idx).padStart(8, "0")}.txt`;
+  const path = `/levels/extra/${difficulty}/${size}x${size}/level_${size}_${String(idx).padStart(8, "0")}.txt`;
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`追加關卡讀取失敗：HTTP ${res.status}`);
   const { n, regions, solution } = parseLevel(await res.text());
@@ -2819,13 +3175,8 @@ function beginGame({ n, mode, levelIdx, regions, solution, seed, fromShareCode =
   state.levelIdx = levelIdx;
   state.levelChapter = chapter === "extra" ? "extra" : "base";
   const gameBackground = v2GameBackground(state.n, mode);
-  if (gameBackground) {
-    document.body.style.setProperty("--game-map-background-image", `url("${gameBackground}")`);
-    el.gameMapBackgroundPreload.src = gameBackground;
-  } else {
-    document.body.style.removeProperty("--game-map-background-image");
-    el.gameMapBackgroundPreload.removeAttribute("src");
-  }
+  if (gameBackground) document.body.style.setProperty("--game-map-background-image", `url("${gameBackground}")`);
+  else document.body.style.removeProperty("--game-map-background-image");
   randomLevelId = mode === "random" && typeof randomLevelId === "string" && randomLevelId
     ? randomLevelId
     : null;
@@ -2866,12 +3217,12 @@ function beginGame({ n, mode, levelIdx, regions, solution, seed, fromShareCode =
 
   el.statusBanner.classList.add("hidden");
   el.winTime?.classList.add("hidden");
+  showGameScreen();
   state.startedAt = performance.now();
   renderGameTitle(mode === "random" ? state.randomElapsedOffsetMs : 0);
   if (mode === "random") startRandomTitleTimer();
   renderBoard();
   renderHearts();
-  showGameScreen();
   if (settings.showHelp) el.helpModal.classList.remove("hidden");
 }
 
@@ -2936,7 +3287,6 @@ function hideAllAppScreens() {
 }
 
 function showAppScreen(screen, pushHistory = true) {
-  const loadingToken = startScreenLoading();
   closeBackpack();
   const target = APP_SCREEN_MAP[screen] ? screen : "home";
   if (["home", "level-modes", "world-map", "small-map", "level-book", "fixed-select", "random-select", "styles", "history", "history-random"].includes(target)) stopRandomTitleTimer();
@@ -2965,23 +3315,23 @@ function showAppScreen(screen, pushHistory = true) {
   if (target === "history") renderGameHistory();
   if (target === "history-random") renderRandomHistoryDetails();
   if (target === "game") startGameplayTimer();
+  syncMusicForScreen(target);
+
   if (pushHistory) {
     const nextState = v2HistoryState(target);
     if (history.state?.screen !== target) history.pushState(nextState, "");
     else history.replaceState(nextState, "");
   }
-  finishScreenLoading(APP_SCREEN_MAP[target](), loadingToken);
 }
 
 function showGameScreen() {
-  const loadingToken = startScreenLoading();
   hideAllAppScreens();
   document.body.dataset.appScreen = "game";
   el.screenGame.classList.remove("hidden");
   startGameplayTimer();
+  syncMusicForScreen("game");
   if (history.state?.screen !== "game") history.pushState({ screen: "game" }, "");
   else history.replaceState({ screen: "game" }, "");
-  finishScreenLoading(el.screenGame, loadingToken);
 }
 
 function showSettingsScreen() {
@@ -3075,12 +3425,11 @@ function playCatRun(r, c) {
   const boardRect = el.board.getBoundingClientRect();
   const cellRect = cell.getBoundingClientRect();
   const height = cellRect.height * 1.25;
-  const pixelRatio = globalThis.devicePixelRatio || 1;
-  const width = Math.max(1, Math.floor(height * 44 / 49 * pixelRatio) / pixelRatio);
+  const width = height;
   const startX = cellRect.left - boardRect.left + (cellRect.width - width) / 2;
   const endX = runsRight ? boardRect.width + 2 : -width - 2;
   const runner = document.createElement("span");
-  const sprite = document.createElement("span");
+  const strip = document.createElement("img");
   runner.className = `cat-runner ${runsRight ? "right" : "left"}`;
   runner.setAttribute("aria-hidden", "true");
   runner.style.left = `${startX}px`;
@@ -3088,8 +3437,9 @@ function playCatRun(r, c) {
   runner.style.width = `${width}px`;
   runner.style.height = `${height}px`;
   runner.style.setProperty("--cat-run-distance", `${endX - startX}px`);
-  sprite.className = "cat-run-frame";
-  runner.appendChild(sprite);
+  strip.src = `images/UI/CatRun${runsRight ? "01" : "02"}.png`;
+  strip.alt = "";
+  runner.appendChild(strip);
   el.board.appendChild(runner);
 
   return new Promise((resolve) => {

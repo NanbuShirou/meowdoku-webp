@@ -5,11 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Meowdoku 🐱</title>
-  <link rel="stylesheet" href="styles.css?v=2.0.6">
+  <link rel="stylesheet" href="styles.css">
   <link id="theme-css" rel="stylesheet" href="themes/default.css">
-  <link rel="stylesheet" href="themes/cell-styles.css?v=2.0.5">
+  <link rel="stylesheet" href="themes/cell-styles.css">
   <link rel="preload" as="image" href="images/UI/mark_paper.png">
-  <link rel="preload" as="image" href="images/UI/background.png">
   <link rel="preload" as="image" href="images/UI/CatRun01.png">
   <link rel="preload" as="image" href="images/UI/CatRun02.png">
   <link rel="icon"
@@ -17,11 +16,6 @@
 </head>
 
 <body>
-  <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite" aria-label="讀取中">
-    <span class="loading-spinner" aria-hidden="true"></span>
-    <span>讀取中…</span>
-  </div>
-
   <header class="app-header">
     <h1><img class="app-header-title" src="images/UI/Titel.png" alt="Meowdoku"></h1>
   </header>
@@ -38,6 +32,7 @@
         <button id="btn-home-styles" class="home-menu-button" type="button" aria-label="方塊風格"><img src="images/bigmap/T03.png" alt=""></button>
         <button id="btn-home-history" class="home-menu-button" type="button" aria-label="遊戲歷史"><img src="images/bigmap/T04.png" alt=""></button>
         <button id="btn-home-settings" class="home-menu-button" type="button" aria-label="設定"><img src="images/bigmap/T05.png" alt=""></button>
+        <button id="btn-home-exit" class="home-menu-button exit-game-button" type="button" aria-label="離開遊戲"><img src="images/bigmap/T06.png" alt=""></button>
       </div>
     </section>
 
@@ -98,7 +93,7 @@
         </button>
       </div>
       <div id="world-map-pager" class="world-map-pager" aria-label="世界地圖"></div>
-      <div id="world-map-indicator" class="world-map-indicator" aria-label="切換世界地圖"></div>
+      <div id="world-map-indicator" class="world-map-indicator" aria-hidden="true"></div>
       <div id="difficulty-picker" class="difficulty-picker hidden" role="dialog" aria-modal="true" aria-labelledby="difficulty-picker-title">
         <div class="difficulty-picker-panel">
           <button id="btn-difficulty-close" class="difficulty-close" type="button" aria-label="關閉">×</button>
@@ -336,7 +331,6 @@
     </section>
 
     <section id="screen-game" class="screen hidden">
-      <img id="game-map-background-preload" class="hidden" alt="">
       <div class="game-toolbar game-nav-row">
         <button id="btn-back" class="icon-button" type="button" aria-label="返回" title="返回">
           <span class="theme-nav-icon theme-back-icon" aria-hidden="true"></span>
@@ -368,6 +362,7 @@
       <div id="game-bottom-actions" class="game-bottom-actions" aria-label="遊戲操作">
         <button id="btn-backpack" class="game-bottom-action" type="button" aria-label="打開背包" title="打開背包"><img src="images/UI/Game_01.png" alt="" aria-hidden="true"></button>
         <button id="btn-save-progress" class="game-bottom-action" type="button" aria-label="中途紀錄" title="中途紀錄"><img src="images/UI/Game_02.png" alt="" aria-hidden="true"></button>
+        <button id="btn-upload-board" class="game-bottom-action" type="button" aria-label="上傳盤面" title="上傳盤面"><img src="images/UI/Game_03.png" alt="" aria-hidden="true"></button>
         <button id="btn-share-code" class="game-bottom-action hidden" type="button" aria-label="關卡分享" title="關卡分享"><img src="images/UI/Game_04.png" alt="" aria-hidden="true"></button>
       </div>
 
@@ -450,10 +445,22 @@
       <div id="save-progress-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="save-progress-title">
         <div class="modal-box">
           <div id="save-progress-title" class="modal-title">中途紀錄</div>
-          <div class="modal-message">紀錄目前的遊戲進度後將返回首頁。<br>下次進入同一關卡時，將從這次紀錄繼續。<br><br>是否要紀錄目前進度？</div>
+          <div class="modal-message">紀錄目前的遊戲進度後將離開遊戲。<br>下次進入同一關卡時，將從這次紀錄繼續。<br><br>是否要紀錄目前進度？</div>
           <div class="modal-buttons">
             <button id="btn-save-progress-no" class="secondary" type="button">否</button>
             <button id="btn-save-progress-yes" type="button">是</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="board-upload-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="board-upload-title">
+        <div class="modal-box">
+          <div id="board-upload-title" class="modal-title">盤面上傳</div>
+          <div id="board-upload-status" class="modal-message">正在建立盤面圖片…</div>
+          <div id="board-upload-url" class="board-upload-url hidden" aria-live="polite"></div>
+          <div class="modal-buttons">
+            <button id="btn-copy-upload-url" class="secondary hidden" type="button">複製網址</button>
+            <button id="btn-close-upload-modal" class="hidden" type="button">關閉</button>
           </div>
         </div>
       </div>
@@ -528,6 +535,41 @@
 
       <div id="settings-page-2" class="settings-page hidden" data-settings-page="2">
         <div class="settings-section settings-secondary-section">
+          <h3 class="settings-section-title">音樂設定</h3>
+          <div class="settings-list">
+            <div class="settings-item music-settings-item">
+              <div class="settings-item-text">
+                <strong>音樂</strong>
+              </div>
+              <button id="btn-toggle-music" class="setting-toggle" aria-label="音樂">
+                <span id="music-state-icon" aria-hidden="true">🎵</span>
+              </button>
+              <button id="btn-music-loop-mode" class="setting-toggle" type="button" aria-label="單曲循環播放" aria-pressed="false">
+                <span id="music-loop-mode-icon" aria-hidden="true">1</span>
+              </button>
+              <select id="music-selection-mode" class="hidden" aria-label="配樂模式">
+                <option value="stage">依關卡配樂</option>
+                <option value="free">自由選曲</option>
+              </select>
+              <div class="music-volume-row hidden" aria-label="音樂音量調整">
+                <span class="music-volume-label">音量</span>
+                <button id="btn-music-volume-down" type="button" class="music-volume-step" data-delta="-1" aria-label="音樂音量減少 1">◀</button>
+                <input id="music-volume-range" class="music-volume-range" type="range" min="0" max="100" step="1" value="50" aria-label="音樂音量滑桿">
+                <button id="btn-music-volume-up" type="button" class="music-volume-step" data-delta="1" aria-label="音樂音量增加 1">▶</button>
+                <input id="music-volume-number" class="music-volume-number" type="number" min="0" max="100" step="1" inputmode="numeric" value="50" aria-label="音樂音量數值">
+              </div>
+              <div class="music-track-row hidden">
+                <span id="music-track-label" class="music-volume-label">歌曲</span>
+                <div class="music-track-heading" aria-hidden="true"><span>播放</span><span>選擇</span><span>關卡難度</span><span>曲名</span></div>
+                <div id="music-track-options" class="music-track-options" role="radiogroup" aria-labelledby="music-track-label"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-page-3" class="settings-page hidden" data-settings-page="3">
+        <div class="settings-section settings-secondary-section">
           <h3 class="settings-section-title">其他</h3>
           <div class="settings-list">
             <button id="btn-help" class="settings-link" type="button">
@@ -542,6 +584,7 @@
           </div>
         </div>
 
+        <button id="btn-settings-exit" class="settings-exit-button" type="button">離開遊戲</button>
         <p class="settings-version">遊戲版本 v2.0.0</p>
       </div>
 
@@ -669,11 +712,12 @@
   </main>
 
   <script src="random-generator.js"></script>
+  <script src="music.js"></script>
   <script src="sound.js"></script>
   <script src="record-scope.js"></script>
   <script src="settings-pages.js"></script>
   <script src="map-data.js"></script>
-  <script src="game.js?v=2.0.6"></script>
+  <script src="game.js"></script>
   <script src="share-code-format.js"></script>
   <script src="share-code.js"></script>
   <script src="selection-ui.js"></script>
