@@ -861,9 +861,7 @@ function updateStartupProgress(done, total, failed = 0) {
   if (el.loadingProgressBar) el.loadingProgressBar.style.width = `${percent}%`;
   if (el.loadingProgressTrack) el.loadingProgressTrack.setAttribute("aria-valuenow", String(percent));
   if (el.loadingProgressText) {
-    el.loadingProgressText.textContent = failed > 0
-      ? `${done} / ${total}　${percent}%　失敗 ${failed}`
-      : `${done} / ${total}　${percent}%`;
+    el.loadingProgressText.textContent = `${percent}%`;
   }
 }
 
