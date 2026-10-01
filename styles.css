@@ -2957,7 +2957,7 @@ html[data-theme-mode="light"] {
 }
 
 
-/* v31: settings page all buttons get 3D styling; theme/sound/vibration use raised-on / sunken-off */
+/* v31: settings page all buttons get 3D styling; theme/sound use raised-on / sunken-off */
 #screen-settings .settings-back-button,
 #screen-settings .settings-link,
 #screen-settings .theme-mode-button,
@@ -3355,7 +3355,7 @@ html[data-theme-mode="dark"] #screen-settings .theme-mode-button:not(.selected) 
   opacity: 1 !important;
 }
 
-/* Sound/vibration: enabled = raised, disabled = pressed and darker. */
+/* Sound: enabled = raised, disabled = pressed and darker. */
 html[data-theme-mode="dark"] #screen-settings .setting-toggle:not(.off) {
   transform: translateY(0) !important;
   filter: none !important;

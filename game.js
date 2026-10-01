@@ -77,7 +77,6 @@ const settings = (() => {
     const s = JSON.parse(localStorage.getItem("meowdoku_settings") || "{}");
     return {
       soundEffects: s.soundEffects !== false,
-      vibrate: s.vibrate !== false,
       markDimming: s.markDimming !== false,
       autoElim: !!s.autoElim,
       hypo: !!s.hypo,
@@ -91,7 +90,6 @@ const settings = (() => {
   } catch {
     return {
       soundEffects: true,
-      vibrate: true,
       markDimming: true,
       autoElim: false,
       hypo: false,
@@ -558,8 +556,6 @@ const el = {
   btnHelpClose: document.getElementById("btn-help-close"),
   btnToggleSoundEffects: document.getElementById("btn-toggle-sound-effects"),
   soundEffectsStateIcon: document.getElementById("sound-effects-state-icon"),
-  btnToggleVibrate: document.getElementById("btn-toggle-vibrate"),
-  vibrateStateIcon: document.getElementById("vibrate-state-icon"),
   btnToggleMarkDimming: document.getElementById("btn-toggle-mark-dimming"),
   markDimmingStateIcon: document.getElementById("mark-dimming-state-icon"),
   btnToggleAuto: document.getElementById("btn-toggle-auto"),
@@ -761,28 +757,18 @@ function finishScreenLoading(root, token) {
   });
 }
 
-// ── Haptic ───────────────────────────────────────────────────────────────────
-
-function vibrate(_type, fallbackMs = 50) {
-  if (!settings.vibrate) return;
-  if (navigator.vibrate) navigator.vibrate(fallbackMs);
-}
-
 // Per-cell DOM elements, indexed [row][col], created once per level load.
 let cellEls = [];
 
 function updateToggleUI() {
   if (el.soundEffectsStateIcon) el.soundEffectsStateIcon.textContent = settings.soundEffects ? "🔊" : "🔇";
-  if (el.vibrateStateIcon) el.vibrateStateIcon.textContent = settings.vibrate ? "📳" : "📴";
   if (el.markDimmingStateIcon) el.markDimmingStateIcon.textContent = settings.markDimming ? "🌗" : "☀️";
   document.documentElement.dataset.markDimming = settings.markDimming ? "on" : "off";
   el.btnToggleSoundEffects?.classList.toggle("off", !settings.soundEffects);
-  el.btnToggleVibrate.classList.toggle("off", !settings.vibrate);
   el.btnToggleMarkDimming?.classList.toggle("off", !settings.markDimming);
   el.btnToggleAuto.classList.toggle("off", !settings.autoElim);
   el.btnToggleHypo?.classList.toggle("off", !settings.hypo);
   el.btnToggleSoundEffects?.setAttribute("aria-pressed", String(settings.soundEffects));
-  el.btnToggleVibrate.setAttribute("aria-pressed", String(settings.vibrate));
   el.btnToggleMarkDimming?.setAttribute("aria-pressed", String(settings.markDimming));
   el.btnToggleAuto.setAttribute("aria-pressed", String(settings.autoElim));
   el.btnToggleHypo?.setAttribute("aria-pressed", String(settings.hypo));
@@ -2189,12 +2175,6 @@ async function init() {
     updateToggleUI();
   });
 
-  el.btnToggleVibrate?.addEventListener("click", () => {
-    settings.vibrate = !settings.vibrate;
-    saveSettings();
-    updateToggleUI();
-    if (settings.vibrate) vibrate("setting", 100);
-  });
   el.btnToggleMarkDimming?.addEventListener("click", () => {
     settings.markDimming = !settings.markDimming;
     saveSettings();
@@ -3217,7 +3197,6 @@ function attemptPlaceCat(r, c) {
     updateCellView(r, c);
     const catRunFinished = playCatRun(r, c);
     soundManager?.playMeow();
-    vibrate("cat", 100);
     if (settings.autoElim) autoEliminate(r, c);
     if (state.items) {
       state.items.checkpoint = true;
