@@ -2654,7 +2654,7 @@ function refreshDoneMarks() {
 async function startLevel(n, idx, fromMap = false) {
   state.launchedFromMap = !!fromMap;
   state.stageStart = Math.floor((idx - 1) / 100) * 100 + 1;
-  const path = `../levels/normal/${n}x${n}/level_${n}_${String(idx).padStart(8, "0")}.txt`;
+  const path = `levels/normal/${n}x${n}/level_${n}_${String(idx).padStart(8, "0")}.txt`;
   const res = await fetch(path);
   if (!res.ok) throw new Error(`關卡讀取失敗：${res.status}`);
   const text = await res.text();
@@ -2680,7 +2680,7 @@ async function startHardLevel(idx, fromMap = false) {
 
   const boardSize = 6 + Math.floor((idx - 1) / 100);
   const localLevel = ((idx - 1) % 100) + 1;
-  const path = `../levels/hard/${boardSize}x${boardSize}/level_${boardSize}_${String(localLevel).padStart(8, "0")}.txt`;
+  const path = `levels/hard/${boardSize}x${boardSize}/level_${boardSize}_${String(localLevel).padStart(8, "0")}.txt`;
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`高難關卡 ${idx} 讀取失敗：HTTP ${res.status}`);
 
@@ -2708,7 +2708,7 @@ async function startExtraLevel(size, difficulty, idx) {
 
   state.launchedFromMap = false;
   state.stageStart = null;
-  const path = `../levels/extra/${difficulty}/${size}x${size}/level_${size}_${String(idx).padStart(8, "0")}.txt`;
+  const path = `levels/extra/${difficulty}/${size}x${size}/level_${size}_${String(idx).padStart(8, "0")}.txt`;
   const res = await fetch(path, { cache: "no-store" });
   if (!res.ok) throw new Error(`追加關卡讀取失敗：HTTP ${res.status}`);
   const { n, regions, solution } = parseLevel(await res.text());
