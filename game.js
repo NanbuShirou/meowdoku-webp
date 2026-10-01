@@ -741,7 +741,8 @@ function startScreenLoading() {
 }
 
 async function waitForImages(root) {
-  const images = [...root.querySelectorAll("img[src]")].filter((image) => image.getClientRects().length > 0);
+  const images = [...root.querySelectorAll("img[src]")];
+  images.forEach((image) => { image.loading = "eager"; });
   await Promise.all(images.map((image) => image.complete ? Promise.resolve() : new Promise((resolve) => {
     image.addEventListener("load", resolve, { once: true });
     image.addEventListener("error", resolve, { once: true });
@@ -2368,7 +2369,7 @@ async function init() {
     : DEFAULT_HARD_LEVEL_COUNT;
   renderSizeButtons();
   renderRandomSizeButtons();
-  finishScreenLoading(document, screenLoadToken);
+  finishScreenLoading(el.screenEntry, screenLoadToken);
 }
 
 function renderRandomSizeButtons() {
