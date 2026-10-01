@@ -978,6 +978,7 @@ h2 {
   width: 800%;
   height: 100%;
   max-width: none;
+  left: var(--cat-run-frame-shift);
   animation: cat-run-steps 560ms steps(8) infinite;
   image-rendering: pixelated;
 }

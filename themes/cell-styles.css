@@ -172,14 +172,18 @@ body[data-cell-style="tile"] .cell[data-state="4"] {
     0 1px 0 rgba(20, 24, 30, 0.32);
 }
 
-/* 半透明遮罩保留 40% 亮度，避免每個排除格都建立 filter 合成層。 */
-html:not([data-mark-dimming="off"]) body[data-cell-style="tile"] .cell[data-state="1"]::after {
+/* 磁磚打 X 基本調暗 15%；開啟額外變暗時保留 40% 亮度。 */
+body[data-cell-style="tile"] .cell[data-state="1"]::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(0, 0, 0, .6);
+  background: rgba(0, 0, 0, .15);
   pointer-events: none;
+}
+
+html:not([data-mark-dimming="off"]) body[data-cell-style="tile"] .cell[data-state="1"]::after {
+  background: rgba(0, 0, 0, .6);
 }
 
 body[data-cell-style="tile"] .cell[data-state="1"] .mark {
