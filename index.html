@@ -12,12 +12,41 @@
   <link rel="preload" as="image" href="images/UI/Titel.png">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+
+  <style id="startup-preload-style">
+    .startup-progress-track {
+      width: min(72vw, 320px);
+      height: 14px;
+      overflow: hidden;
+      border: 2px solid rgba(81, 52, 20, .58);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .34);
+      box-sizing: border-box;
+    }
+    .startup-progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: #7b4b18;
+      transition: width 120ms linear;
+    }
+    .startup-progress-text {
+      min-width: min(72vw, 320px);
+      text-align: center;
+      font-size: .9rem;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
 </head>
 
 <body>
   <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite" aria-label="讀取中">
     <span class="loading-spinner" aria-hidden="true"></span>
-    <span>讀取中…</span>
+    <span id="loading-message">正在準備遊戲…</span>
+    <div id="loading-progress-track" class="startup-progress-track" role="progressbar" aria-label="圖片下載進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="loading-progress-bar" class="startup-progress-bar"></div>
+    </div>
+    <span id="loading-progress-text" class="startup-progress-text">0%</span>
   </div>
 
   <header class="app-header">
@@ -662,7 +691,7 @@
   <script src="record-scope.js"></script>
   <script src="settings-pages.js"></script>
   <script src="map-data.js"></script>
-  <script src="game.js?v=2.1.1"></script>
+  <script src="game.js?v=2.1.2"></script>
   <script src="share-code-format.js"></script>
   <script src="share-code.js"></script>
   <script src="selection-ui.js"></script>

@@ -447,6 +447,10 @@ const el = {
   cellStyleCurrentName: document.getElementById("cell-style-current-name"),
   screenEntry: document.getElementById("screen-entry"),
   loadingOverlay: document.getElementById("loading-overlay"),
+  loadingMessage: document.getElementById("loading-message"),
+  loadingProgressTrack: document.getElementById("loading-progress-track"),
+  loadingProgressBar: document.getElementById("loading-progress-bar"),
+  loadingProgressText: document.getElementById("loading-progress-text"),
   screenHome: document.getElementById("screen-home"),
   screenLevelModes: document.getElementById("screen-level-modes"),
   screenWorldMap: document.getElementById("screen-world-map"),
@@ -733,6 +737,112 @@ soundManager?.configure({ enabled: settings.soundEffects });
 
 let screenLoadToken = 0;
 
+// Startup downloads all runtime image assets once. Later screens can use the
+// browser cache instead of visibly streaming images after navigation.
+const STARTUP_IMAGE_ASSETS = Object.freeze([
+  "images/UI/C00.png",
+  "images/UI/C00.webp",
+  "images/UI/C01.webp",
+  "images/UI/C02.webp",
+  "images/UI/C03.webp",
+  "images/UI/C04.webp",
+  "images/UI/C05.webp",
+  "images/UI/CatRun01.png",
+  "images/UI/CatRun02.png",
+  "images/UI/Fish_bone.png",
+  "images/UI/Game_01.png",
+  "images/UI/Game_02.png",
+  "images/UI/Game_04.png",
+  "images/UI/Game_05.png",
+  "images/UI/Game_06.png",
+  "images/UI/Game_07.png",
+  "images/UI/Titel.png",
+  "images/UI/back-dark.png",
+  "images/UI/background.png",
+  "images/UI/background_Darkcolor.png",
+  "images/UI/background_Darkcolora.png",
+  "images/UI/background_Lightcolor.png",
+  "images/UI/background_cat.png",
+  "images/UI/background_cat2.png",
+  "images/UI/background_cat3.png",
+  "images/UI/cat_footprints.png",
+  "images/UI/manual.png",
+  "images/UI/mark_paper.png",
+  "images/UI/next-dark.png",
+  "images/UI/setup-dark.png",
+  "images/UI/ui_icon_arrow_left.png",
+  "images/UI/ui_icon_arrow_right.png",
+  "images/UI/ui_icon_lock.png",
+  "images/UI/ui_icon_paw.png",
+  "images/UI/ui_mapspot_Perfect.png",
+  "images/UI/ui_mapspot_cleared.png",
+  "images/UI/ui_mapspot_current.png",
+  "images/UI/ui_mapspot_locked.png",
+  "images/UI/ui_mapspot_open.png",
+  "images/UI/ui_stagenode_00.png",
+  "images/UI/ui_stagenode_01.png",
+  "images/UI/ui_stagenode_02.png",
+  "images/UI/ui_stagenode_03.png",
+  "images/UI/ui_stagenode_04.png",
+  "images/UI/ui_stagenode_05.png",
+  "images/bigmap/0map01.png",
+  "images/bigmap/0map02.png",
+  "images/bigmap/0map03.png",
+  "images/bigmap/A01.png",
+  "images/bigmap/A02.png",
+  "images/bigmap/A03.png",
+  "images/bigmap/B01.png",
+  "images/bigmap/B02.png",
+  "images/bigmap/B03.png",
+  "images/bigmap/C01.png",
+  "images/bigmap/C09.png",
+  "images/bigmap/T01.png",
+  "images/bigmap/T02.png",
+  "images/bigmap/T03.png",
+  "images/bigmap/T04.png",
+  "images/bigmap/T05.png",
+  "images/bookmap/2map.png",
+  "images/smallmap/1map01a.png",
+  "images/smallmap/1map01b.png",
+  "images/smallmap/1map02a.png",
+  "images/smallmap/1map02b.png",
+  "images/smallmap/1map03a.png",
+  "images/smallmap/1map03b.png",
+  "images/smallmap/1map04a.png",
+  "images/smallmap/1map04b.png",
+  "images/smallmap/1map05a.png",
+  "images/smallmap/1map05b.png",
+  "images/smallmap/1map06a.png",
+  "images/smallmap/1map06b.png",
+  "images/smallmap/1map07a.png",
+  "images/smallmap/1map07b.png",
+  "images/smallmap/1map08.png",
+  "images/smallmap/sBtn01a.png",
+  "images/smallmap/sBtn01b.png",
+  "images/smallmap/sBtn02a.png",
+  "images/smallmap/sBtn02b.png",
+  "images/smallmap/sBtn03a.png",
+  "images/smallmap/sBtn03b.png",
+  "images/smallmap/sBtn04a.png",
+  "images/smallmap/sBtn04b.png",
+  "images/smallmap/sBtn05a.png",
+  "images/smallmap/sBtn05b.png",
+  "images/smallmap/sBtn06a.png",
+  "images/smallmap/sBtn06b.png",
+  "images/smallmap/sBtn07a.png",
+  "images/smallmap/sBtn07b.png",
+  "images/smallmap/sBtn08a.png",
+  "images/smallmap/sBtn08b.png",
+  "images/smallmap/sBtn08c.png",
+  "images/smallmap/sBtn08d.png",
+  "images/smallmap/sBtn08e.png",
+  "images/smallmap/sBtn08f.png",
+  "images/smallmap/sBtn08g.png",
+  "images/smallmap/sBtn09g.png"
+]);
+const STARTUP_PRELOAD_CONCURRENCY = 10;
+const STARTUP_ASSET_TIMEOUT_MS = 15000;
+
 function startScreenLoading() {
   const token = ++screenLoadToken;
   el.loadingOverlay?.classList.remove("hidden");
@@ -744,6 +854,74 @@ function finishScreenLoading(_root, token) {
   if (token !== screenLoadToken) return;
   el.loadingOverlay?.classList.add("hidden");
   document.body.removeAttribute("aria-busy");
+}
+
+function updateStartupProgress(done, total, failed = 0) {
+  const percent = total > 0 ? Math.round((done / total) * 100) : 100;
+  if (el.loadingProgressBar) el.loadingProgressBar.style.width = `${percent}%`;
+  if (el.loadingProgressTrack) el.loadingProgressTrack.setAttribute("aria-valuenow", String(percent));
+  if (el.loadingProgressText) {
+    el.loadingProgressText.textContent = failed > 0
+      ? `${done} / ${total}　${percent}%　失敗 ${failed}`
+      : `${done} / ${total}　${percent}%`;
+  }
+}
+
+function preloadImageAsset(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.loading = "eager";
+    let settled = false;
+
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      image.onload = null;
+      image.onerror = null;
+      resolve(ok);
+    };
+
+    const timer = setTimeout(() => finish(false), STARTUP_ASSET_TIMEOUT_MS);
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    image.src = src;
+  });
+}
+
+async function preloadStartupImages() {
+  const assets = [...new Set(STARTUP_IMAGE_ASSETS)];
+  const total = assets.length;
+  let cursor = 0;
+  let done = 0;
+  let failed = 0;
+
+  if (el.loadingMessage) el.loadingMessage.textContent = "正在下載遊戲圖片…";
+  updateStartupProgress(0, total, 0);
+
+  async function worker() {
+    while (true) {
+      const index = cursor++;
+      if (index >= total) return;
+      const src = assets[index];
+      let ok = await preloadImageAsset(src);
+      if (!ok) ok = await preloadImageAsset(src);
+      if (!ok) failed++;
+      done++;
+      updateStartupProgress(done, total, failed);
+    }
+  }
+
+  const workerCount = Math.min(STARTUP_PRELOAD_CONCURRENCY, total);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  if (el.loadingMessage) {
+    el.loadingMessage.textContent = failed > 0
+      ? `圖片下載完成，但有 ${failed} 個素材載入失敗`
+      : "圖片下載完成，正在準備遊戲…";
+  }
+  return failed;
 }
 
 // Per-cell DOM elements, indexed [row][col], created once per level load.
@@ -2343,8 +2521,13 @@ async function init() {
   el.board.addEventListener("pointerup", onPointerUp);
   el.board.addEventListener("pointercancel", onPointerUp);
 
-  const res = await fetch("levels_index.json");
-  const levelIndex = await res.json();
+  const levelIndexPromise = fetch("levels_index.json").then((res) => {
+    if (!res.ok) throw new Error(`關卡索引讀取失敗：HTTP ${res.status}`);
+    return res.json();
+  });
+  const preloadPromise = preloadStartupImages();
+
+  const [levelIndex] = await Promise.all([levelIndexPromise, preloadPromise]);
   state.sizes = levelIndex.sizes || levelIndex;
   state.extraLevels = normalizeExtraLevels(levelIndex.extras);
   state.fixedLevelsReady = levelIndex.v2Ready === true;
