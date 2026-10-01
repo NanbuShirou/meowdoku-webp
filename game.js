@@ -897,7 +897,7 @@ async function preloadStartupImages() {
   let done = 0;
   let failed = 0;
 
-  if (el.loadingMessage) el.loadingMessage.textContent = "正在下載遊戲圖片…";
+  if (el.loadingMessage) el.loadingMessage.textContent = "正在安裝遊戲…";
   updateStartupProgress(0, total, 0);
 
   async function worker() {
